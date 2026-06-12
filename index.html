@@ -1011,7 +1011,9 @@ function recalcRow(i){
   const [h1,n1]=m1.split(':').map(Number), [h2,n2]=m2.split(':').map(Number);
   let d=(h2*60+n2-(h1*60+n1))/60;
   if(d<0) d+=24; // lintas tengah malam
-  d=Math.round(d*2)/2;
+  // PEMBULATAN KE BAWAH per 0,5 jam:
+  // 16:00–17:29 = 1 jam · baru 17:30 dihitung 1,5 jam
+  d=Math.floor(d*2)/2;
   formRows[i].jamMulai=m1; formRows[i].jamSelesai=m2; formRows[i].durasi=d;
   $('#du'+i).value=d; $('#no'+i).value=rp(calcNominal(d));
   updateSummary();
@@ -1369,6 +1371,10 @@ function karDlg(i){
   const k = i!==undefined? window._kar[i] : null;
   const divs=[...new Set(STATE.boot.divisi.map(d=>d.divisi))];
   const subs=[...new Set(STATE.boot.divisi.map(d=>d.subDivisi))];
+  // Dropdown Jabatan: gabungan jabatan unik dari data karyawan + standar
+  const jabSet=new Set(['MANAGER','SUPERVISOR','LEADER','LEADER PENGIRIMAN','STAF ADMIN','STAF HELPER','STAF KENEK','STAF SUPIR','STAF GUDANG','STAF IT','SECURITY','DRIVER']);
+  (STATE.boot.karyawan||[]).concat(window._kar||[]).forEach(x=>{ if(x&&x.jabatan) jabSet.add(String(x.jabatan).toUpperCase()); });
+  const jabs=[...jabSet].sort();
   openModal(`<button class="x" onclick="closeModal()">✕</button>
     <h3>${k?'✎ Edit':'＋ Tambah'} Karyawan</h3><div style="height:12px"></div>
     <div class="grid g-2" style="gap:12px">
@@ -1381,7 +1387,13 @@ function karDlg(i){
       <div class="fld"><label>Sub Divisi</label><select id="kSub">${subs.map(s=>'<option '+(k&&k.subDivisi===s?'selected':'')+'>'+esc(s)+'</option>').join('')}</select></div>
     </div>
     <div class="grid g-2" style="gap:12px">
-      <div class="fld"><label>Jabatan</label><input id="kJab" value="${k?esc(k.jabatan):''}" placeholder="mis. STAF HELPER"></div>
+      <div class="fld"><label>Jabatan</label>
+        <select id="kJabSel" onchange="$('#kJab').style.display=this.value==='__LAIN__'?'block':'none';if(this.value!=='__LAIN__')$('#kJab').value=this.value">
+          ${jabs.map(j=>'<option value="'+esc(j)+'" '+(k&&String(k.jabatan).toUpperCase()===j?'selected':'')+'>'+esc(j)+'</option>').join('')}
+          <option value="__LAIN__" ${k&&k.jabatan&&!jabs.includes(String(k.jabatan).toUpperCase())?'selected':''}>✎ LAINNYA (ketik manual)…</option>
+        </select>
+        <input id="kJab" value="${k?esc(k.jabatan):jabs[0]||''}" placeholder="ketik jabatan baru..." style="margin-top:7px;display:${k&&k.jabatan&&!jabs.includes(String(k.jabatan).toUpperCase())?'block':'none'}">
+      </div>
       <div class="fld"><label>Status</label><select id="kSt"><option ${k&&k.status==='AKTIF'?'selected':''}>AKTIF</option><option ${k&&k.status==='RESIGN'?'selected':''}>RESIGN</option></select></div>
     </div>
     <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
@@ -1649,6 +1661,16 @@ function renderSyncInfo(r){
 async function syncConnect(){
   const url=$('#syUrl').value.trim(), web=$('#syWeb').value.trim();
   if(!url&&!web) return toast('Isi URL Spreadsheet dan/atau Web App URL','warn');
+  // MODE DEMO + diisi Web App URL → jadikan koneksi backend SUNGGUHAN
+  // (tersimpan di browser), lalu reload agar beralih ke mode REMOTE.
+  if(IS_DEMO && web){
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(web))
+      return toast('Web App URL harus dari script.google.com (akhiran /exec)','warn');
+    setApiUrl(web);
+    toast('Backend tersimpan — beralih dari MODE DEMO ke LIVE…');
+    setTimeout(()=>location.reload(), 900);
+    return;
+  }
   const btn=$('#syBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Menghubungkan...';
   try{
     const r=await rpc('apiSyncConnect', url, web);
@@ -1717,5 +1739,5 @@ async function saveRates(){
   }catch(e){ toast(e.message,'err'); }
 }
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0ab0208fa40ce49',t:'MTc4MTI4OTg3Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
