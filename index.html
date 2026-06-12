@@ -313,7 +313,7 @@ tbody tr:last-child td{border-bottom:none}
 // Apps Script (https://script.google.com/macros/s/.../exec).
 // Boleh dikosongkan — bisa juga diisi dari halaman login (tersimpan
 // di localStorage browser).
-const GAS_API_URL_DEFAULT = '';
+const GAS_API_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbz8EZoug3JptIa-iudb17OgOQGiZ_N2LxQBhV1gwB4s5DlU71pXdetZcjvCngV3SUY4/exec';
 
 const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
 function getApiUrl(){ try{ return localStorage.getItem('OT_API_URL') || GAS_API_URL_DEFAULT; }catch(e){ return GAS_API_URL_DEFAULT; } }
