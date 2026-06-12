@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overtime System</title>
+<style>
+/* ============ DESIGN SYSTEM ============ */
+:root{
+  --pri:#4f46e5; --pri-d:#4338ca; --pri-l:#eef2ff; --vio:#7c3aed;
+  --ink:#0f172a; --ink-2:#475569; --ink-3:#94a3b8;
+  --bg:#f1f5f9; --card:#ffffff; --line:#e2e8f0;
+  --ok:#059669; --ok-l:#d1fae5; --warn:#d97706; --warn-l:#fef3c7;
+  --err:#dc2626; --err-l:#fee2e2; --info:#0284c7; --info-l:#e0f2fe;
+  --side:#111827; --side-2:#1f2937;
+  --r:14px; --sh:0 1px 3px rgba(15,23,42,.08),0 4px 16px rgba(15,23,42,.06);
+  --sh-lg:0 8px 30px rgba(15,23,42,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{0%{opacity:0;transform:scale(.92)}70%{transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.anim{animation:fadeUp .45s cubic-bezier(.22,1,.36,1) both}
+.anim-d1{animation-delay:.06s}.anim-d2{animation-delay:.12s}.anim-d3{animation-delay:.18s}.anim-d4{animation-delay:.24s}
+
+/* ============ LOGIN ============ */
+#loginPage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 45%,#4f46e5 100%);overflow:hidden;z-index:50}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:floaty 7s ease-in-out infinite}
+.orb1{width:380px;height:380px;background:#7c3aed;top:-90px;left:-90px}
+.orb2{width:300px;height:300px;background:#0ea5e9;bottom:-70px;right:-50px;animation-delay:2s}
+.login-card{position:relative;width:min(400px,92vw);background:rgba(255,255,255,.97);border-radius:22px;padding:38px 34px;box-shadow:0 30px 80px rgba(0,0,0,.45);animation:popIn .55s cubic-bezier(.22,1,.36,1) both}
+.login-logo{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,var(--pri),var(--vio));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 10px 24px rgba(79,70,229,.45)}
+.login-card h1{text-align:center;font-size:22px;font-weight:800;letter-spacing:.3px}
+.login-card .sub{text-align:center;color:var(--ink-3);font-size:12.5px;margin:4px 0 24px}
+.fld{margin-bottom:15px}
+.fld label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fld .inwrap{position:relative}
+.fld input,.fld select,.fld textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fff;transition:.2s;outline:none}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,70,229,.14)}
+.eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-3);font-size:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border:none;border-radius:11px;font-weight:700;font-size:14px;transition:.18s;position:relative;overflow:hidden}
+.btn:active{transform:scale(.97)}
+.btn-pri{background:linear-gradient(135deg,var(--pri),var(--vio));color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.35)}
+.btn-pri:hover{filter:brightness(1.08);box-shadow:0 8px 22px rgba(79,70,229,.45)}
+.btn-ghost{background:#fff;color:var(--ink-2);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--pri);color:var(--pri)}
+.btn-ok{background:var(--ok);color:#fff}.btn-err{background:var(--err);color:#fff}
+.btn-sm{padding:7px 13px;font-size:12.5px;border-radius:9px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.login-err{display:none;background:var(--err-l);color:var(--err);padding:10px 13px;border-radius:10px;font-size:13px;margin-bottom:14px;animation:popIn .3s both}
+.demo-hint{margin-top:18px;font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.7}
+.cred-chip{display:inline-flex;align-items:center;gap:6px;background:var(--pri-l);color:var(--pri-d);border:1.5px solid #c7d2fe;border-radius:99px;padding:5px 12px;font-size:11.5px;font-weight:800;cursor:pointer;transition:.18s;margin:3px 2px;user-select:none}
+.cred-chip:hover{background:var(--pri);color:#fff;border-color:var(--pri);transform:translateY(-1px);box-shadow:0 4px 10px rgba(79,70,229,.3)}
+.cred-chip:active{transform:scale(.95)}
+.cred-chip.demo{background:var(--warn-l);color:#92400e;border-color:#fcd34d}
+.cred-chip.demo:hover{background:var(--warn);color:#fff;border-color:var(--warn)}
+
+/* ============ APP SHELL ============ */
+#app{display:none;min-height:100vh}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:256px;background:var(--side);color:#cbd5e1;display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:40;transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:20px 20px 16px}
+.sb-logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--vio));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-brand b{color:#fff;font-size:15.5px;letter-spacing:.3px}
+.sb-brand span{display:block;font-size:10.5px;color:#64748b;letter-spacing:1.5px}
+.sb-nav{flex:1;padding:10px 12px;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;color:#94a3b8;font-weight:600;font-size:13.5px;margin-bottom:3px;border:none;background:none;width:100%;text-align:left;transition:.18s}
+.sb-item:hover{background:var(--side-2);color:#e2e8f0}
+.sb-item.active{background:linear-gradient(135deg,var(--pri),var(--vio));color:#fff;box-shadow:0 6px 14px rgba(79,70,229,.4)}
+.sb-item svg{flex-shrink:0}
+.sb-item .car{margin-left:auto;transition:transform .25s;font-size:10px}
+.sb-item.expanded .car{transform:rotate(90deg)}
+.sb-sub{overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(.22,1,.36,1)}
+.sb-sub.open{max-height:220px}
+.sb-subitem{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;color:#94a3b8;font-weight:600;font-size:12.5px;padding:9px 14px 9px 30px;border-radius:10px;margin-bottom:2px;transition:.18s;position:relative}
+.sb-subitem::before{content:'';width:5px;height:5px;border-radius:50%;background:#475569;flex-shrink:0;transition:.18s}
+.sb-subitem:hover{background:var(--side-2);color:#e2e8f0}
+.sb-subitem.active{color:#fff;background:var(--side-2)}
+.sb-subitem.active::before{background:var(--vio);box-shadow:0 0 8px var(--vio)}
+.sb-user{padding:14px 16px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:11px}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.sb-user .nm{font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user .rl{font-size:10.5px;color:#64748b;letter-spacing:.8px}
+.sb-out{margin-left:auto;background:none;border:none;color:#64748b;padding:6px;border-radius:8px}
+.sb-out:hover{color:#f87171;background:#1f2937}
+.main{flex:1;margin-left:256px;display:flex;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 26px;display:flex;align-items:center;gap:14px}
+.burger{display:none;background:none;border:none;padding:6px}
+.topbar h2{font-size:17px;font-weight:800}
+.top-badge{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+.content{padding:26px;max-width:1280px;width:100%;margin:0 auto}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:35;animation:fadeIn .25s both}
+
+/* ============ COMPONENTS ============ */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:22px;border:1px solid rgba(226,232,240,.7)}
+.grid{display:grid;gap:18px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.g-2{grid-template-columns:1fr 1fr}
+.kpi{position:relative;overflow:hidden}
+.kpi .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.kpi .v{font-size:25px;font-weight:800;letter-spacing:-.5px}
+.kpi .l{font-size:12px;color:var(--ink-3);font-weight:600;margin-top:2px}
+.kpi::after{content:'';position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:currentColor;opacity:.06}
+.sec-title{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.b-PENDING{background:var(--warn-l);color:var(--warn)}
+.b-APPROVED{background:var(--ok-l);color:var(--ok)}
+.b-REJECTED{background:var(--err-l);color:var(--err)}
+.b-CANCELLED{background:#f1f5f9;color:var(--ink-3)}
+.b-REVISI{background:var(--info-l);color:var(--info)}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{background:#f8fafc;text-align:left;padding:11px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--ink-3);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr{transition:.15s}
+tbody tr:hover{background:var(--pri-l)}
+tbody tr:last-child td{border-bottom:none}
+.skeleton{height:13px;border-radius:6px;background:linear-gradient(90deg,#e9eef5 25%,#f6f8fb 50%,#e9eef5 75%);background-size:800px 100%;animation:shimmer 1.3s infinite}
+.empty{text-align:center;padding:46px 16px;color:var(--ink-3)}
+.empty svg{margin-bottom:10px;opacity:.4}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.toolbar input,.toolbar select{padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;outline:none;background:#fff;transition:.2s}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--pri)}
+.pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:14px;font-size:12.5px;color:var(--ink-3)}
+.pager button{padding:7px 12px;border:1.5px solid var(--line);background:#fff;border-radius:9px;font-weight:700}
+.pager button:hover:not([disabled]){border-color:var(--pri);color:var(--pri)}
+.pager button[disabled]{opacity:.4;cursor:not-allowed}
+
+/* modal & drawer */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:60;display:none;align-items:center;justify-content:center;padding:18px;animation:fadeIn .2s both}
+.modal{background:#fff;border-radius:18px;width:min(620px,100%);max-height:88vh;overflow:auto;padding:26px;animation:popIn .35s cubic-bezier(.22,1,.36,1) both;box-shadow:var(--sh-lg)}
+.modal.lg{width:min(860px,100%)}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:4px}
+.modal .x{float:right;background:#f1f5f9;border:none;width:32px;height:32px;border-radius:9px;font-size:15px;color:var(--ink-2)}
+.modal .x:hover{background:var(--err-l);color:var(--err)}
+
+/* toast */
+#toasts{position:fixed;top:18px;right:18px;z-index:90;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:11px;background:#fff;border-radius:13px;padding:13px 17px;box-shadow:var(--sh-lg);min-width:260px;max-width:360px;animation:slideRight .4s cubic-bezier(.22,1,.36,1) both;border-left:4px solid var(--pri);font-size:13px;font-weight:600}
+.toast.ok{border-color:var(--ok)}.toast.err{border-color:var(--err)}.toast.warn{border-color:var(--warn)}
+
+/* charts */
+.bar-chart{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:8px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.bar{width:100%;max-width:46px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,var(--vio),var(--pri));transform-origin:bottom;animation:barGrow .7s cubic-bezier(.22,1,.36,1) both;position:relative}
+.bar:hover{filter:brightness(1.15)}
+.bar-lbl{font-size:10.5px;color:var(--ink-3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bar-val{font-size:10.5px;font-weight:800;color:var(--pri)}
+.legend{display:flex;flex-direction:column;gap:9px;font-size:12.5px}
+.legend .row{display:flex;align-items:center;gap:9px}
+.legend .sw{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.legend b{margin-left:auto}
+
+/* form OT header (2x2 compact) */
+.fhead{max-width:680px}
+.fhead .grid{gap:12px}
+.fhead input,.fhead select{padding:9px 11px;font-size:13px}
+/* form OT detail rows */
+.det-row{display:grid;grid-template-columns:minmax(180px,2.6fr) minmax(110px,1.4fr) 86px 86px 56px 110px 34px;gap:8px;align-items:center;padding:10px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:9px;background:#fafbfd;animation:fadeUp .3s both}
+.det-row input,.det-row select{padding:8px 8px;border:1.5px solid var(--line);border-radius:9px;outline:none;width:100%;background:#fff;font-size:12.5px}
+.det-row input:focus{border-color:var(--pri)}
+.det-row .del{background:var(--err-l);color:var(--err);border:none;width:32px;height:32px;border-radius:9px;font-weight:800}
+.det-head{display:grid;grid-template-columns:minmax(180px,2.6fr) minmax(110px,1.4fr) 86px 86px 56px 110px 34px;gap:8px;padding:0 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-3);font-weight:800;margin-bottom:7px}
+.sum-box{display:flex;gap:22px;flex-wrap:wrap;background:linear-gradient(135deg,var(--pri-l),#f5f3ff);border-radius:13px;padding:16px 20px;margin-top:16px}
+.sum-box .it b{display:block;font-size:19px;color:var(--pri)}
+.sum-box .it span{font-size:11.5px;color:var(--ink-2);font-weight:700}
+.ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--line);border-radius:11px;box-shadow:var(--sh-lg);z-index:20;max-height:210px;overflow:auto;display:none}
+.ac-list div{padding:9px 13px;cursor:pointer;font-size:13px}
+.ac-list div:hover{background:var(--pri-l)}
+.ac-list small{display:block;color:var(--ink-3)}
+
+/* approval cards */
+.ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.ap-card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:16px 18px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;animation:fadeUp .35s both}
+.ap-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--warn),#fbbf24)}
+.ap-card:hover{border-color:var(--pri);box-shadow:var(--sh-lg);transform:translateY(-3px)}
+.ap-card .id{font-weight:800;color:var(--pri);font-size:13px;margin-bottom:9px;word-break:break-all;padding-right:60px}
+.ap-card .meta{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px}
+.ap-card .meta .k{color:var(--ink-3);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;align-self:center}
+.ap-card .meta .v{font-weight:600;color:var(--ink)}
+.ap-card .foot{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--ink-3);font-weight:700}
+.ap-card .nominal{margin-left:auto;color:var(--pri);font-weight:800;font-size:13px}
+.ap-card .pend{position:absolute;top:12px;right:12px}
+/* tabs (master data) */
+.tabs{display:flex;gap:6px;border-bottom:2px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+.tab{background:none;border:none;padding:10px 16px;font-weight:700;font-size:13px;color:var(--ink-3);border-radius:10px 10px 0 0;position:relative;transition:.18s}
+.tab:hover{color:var(--pri);background:var(--pri-l)}
+.tab.active{color:var(--pri)}
+.tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2.5px;background:linear-gradient(90deg,var(--pri),var(--vio));border-radius:3px}
+/* timeline (audit) */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 18px}
+.tl-item::before{content:'';position:absolute;left:-23.5px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--pri);border:2.5px solid #fff;box-shadow:0 0 0 2px var(--pri-l)}
+.tl-item .ts{font-size:11px;color:var(--ink-3);font-weight:700}
+.tl-item .ac{font-weight:800;font-size:13px}
+.tl-item .dt{font-size:12.5px;color:var(--ink-2)}
+
+@media print{
+  .sidebar,.topbar,.toolbar,.pager,.no-print{display:none!important}
+  .main{margin:0!important}.content{padding:0;max-width:none}
+  .card{box-shadow:none;border:none}
+}
+.det-scroll{overflow-x:auto;padding-bottom:4px}
+.form-hidden{display:none!important}
+@media (max-width:980px){
+  .g-2{grid-template-columns:1fr}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none;box-shadow:30px 0 60px rgba(0,0,0,.3)}
+  .main{margin-left:0}
+  .burger{display:block}
+  .content{padding:16px}
+  /* detail tetap 1 baris: scroll horizontal di layar kecil */
+  .det-row,.det-head{min-width:720px}
+  .fhead{max-width:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginPage">
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </div>
+    <h1>OVERTIME SYSTEM</h1>
+    <p class="sub">Manajemen Lembur Karyawan · Google Sheets Powered</p>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fld">
+      <label>Username</label>
+      <input id="inUser" autocomplete="username" placeholder="Masukkan username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="fld">
+      <label>Password</label>
+      <div class="inwrap">
+        <input id="inPass" type="password" autocomplete="current-password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="eye" onclick="togglePass()" type="button" aria-label="show password">👁</button>
+      </div>
+    </div>
+    <button class="btn btn-pri btn-block" id="btnLogin" onclick="doLogin()">Masuk &nbsp;→</button>
+    <div class="demo-hint" id="demoHint"></div>
+    <div id="apiCfg" style="display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px">
+      <div style="font-size:11px;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔌 Backend Apps Script (mode hosting eksternal)</div>
+      <input id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;outline:none;font-size:12px">
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <button class="btn btn-pri btn-sm" style="flex:1" onclick="saveApiUrl()">💾 Simpan & Hubungkan</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearApiUrl()">Hapus</button>
+      </div>
+      <p id="apiStatus" style="font-size:10.5px;color:var(--ink-3);margin-top:6px;text-align:center"></p>
+    </div>
+    <button id="apiCfgToggle" onclick="toggleApiCfg()" style="display:none;background:none;border:none;color:var(--ink-3);font-size:11px;margin:10px auto 0;display:block;text-decoration:underline;cursor:pointer">⚙ Atur koneksi backend</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <div class="shell">
+    <div class="overlay" id="overlay" onclick="toggleSide(false)"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+        <div><b>OT-SYS</b><span>OVERTIME SYSTEM</span></div>
+      </div>
+      <nav class="sb-nav" id="sbNav"></nav>
+      <div class="sb-user">
+        <div class="avatar" id="uAvatar">?</div>
+        <div style="min-width:0"><div class="nm" id="uName">—</div><div class="rl" id="uRole">—</div></div>
+        <button class="sb-out" onclick="doLogout()" title="Logout"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="burger" onclick="toggleSide()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <h2 id="pageTitle">Dashboard</h2>
+        <div class="top-badge"><span class="live-dot"></span><span id="connLbl">Terhubung GSheet</span></div>
+      </header>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+<div id="toasts"></div>
+
+<script>
+/* ================================================================
+   OVERTIME SYSTEM — FRONTEND SPA
+   3 mode otomatis:
+   1. GAS    : dibuka dari Apps Script Web App (google.script.run)
+   2. REMOTE : di-hosting eksternal (GitHub Pages dll) → fetch ke
+               Web App URL Apps Script (REST via doPost)
+   3. DEMO   : preview offline tanpa backend (mock data)
+================================================================ */
+// ⚙ KONFIGURASI GITHUB PAGES: isi dengan Web App URL hasil deploy
+// Apps Script (https://script.google.com/macros/s/.../exec).
+// Boleh dikosongkan — bisa juga diisi dari halaman login (tersimpan
+// di localStorage browser).
+const GAS_API_URL_DEFAULT = '';
+
+const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+function getApiUrl(){ try{ return localStorage.getItem('OT_API_URL') || GAS_API_URL_DEFAULT; }catch(e){ return GAS_API_URL_DEFAULT; } }
+function setApiUrl(u){ try{ u?localStorage.setItem('OT_API_URL',u):localStorage.removeItem('OT_API_URL'); }catch(e){} }
+const IS_REMOTE = !IS_GAS && !!getApiUrl();
+const IS_DEMO = !IS_GAS && !IS_REMOTE;
+
+/** Panggil backend Apps Script via REST (mode REMOTE).
+ *  Content-Type text/plain → tidak memicu CORS preflight. */
+async function remoteCall(fn, args){
+  const res = await fetch(getApiUrl(), {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({fn:fn, args:args})
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status+' — cek Web App URL & akses "Anyone"');
+  const data = await res.json();
+  if(data && data.__error) throw new Error(data.__error);
+  return data;
+}
+
+/* ---------------- MOCK BACKEND (demo/preview mode) -------------- */
+const MOCK = (() => {
+  const users = [
+    {Username:'IRAWAN', Password:'609215', FullName:'SUPER ADMIN', Role:'ADMIN', AksesMenu:'Dashboard, Form OT, OT History, Approval, Audit Log, Report, Settings'},
+    {Username:'TUTI', Password:'111111', FullName:'MENANG WIJI ASTUTI', Role:'USER', AksesMenu:'Dashboard, Form OT, OT History'},
+    {Username:'NURIZ', Password:'222222', FullName:'NUR RIZKY HANDAYANI', Role:'USER', AksesMenu:'Dashboard, Form OT, OT History'},
+    {Username:'BAMBANG', Password:'609215', FullName:'BAMBANG IRAWAN', Role:'MANAGER', AksesMenu:'Dashboard, Form OT, OT History, Approval, Report'}
+  ];
+  const karyawan = [
+    {nik:'1019900014',id:'900014',nama:'EDI KUSNAEDI',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'STAF HELPER',status:'AKTIF'},
+    {nik:'624800002',id:'800002',nama:'BAMBANG IRAWAN',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'MANAGER',status:'AKTIF'},
+    {nik:'719900008',id:'900008',nama:'M SUJAI',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'LEADER PENGIRIMAN',status:'AKTIF'},
+    {nik:'1025800084',id:'800084',nama:'MIRWAN',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'STAF KENEK',status:'AKTIF'},
+    {nik:'325800037',id:'800037',nama:'SAEFULOH',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'STAF KENEK',status:'AKTIF'},
+    {nik:'100009',id:'100009',nama:'TOPIK KUSWANTO',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'STAF SUPIR',status:'AKTIF'},
+    {nik:'800051',id:'800051',nama:'YOGA BRAMANTARA',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',jabatan:'STAF HELPER',status:'AKTIF'},
+    {nik:'800035',id:'800035',nama:'DIVANA PUTRI AZAHRA',divisi:'HEAD OFFICE',subDivisi:'HR',jabatan:'STAF ADMIN',status:'AKTIF'},
+    {nik:'800046',id:'800046',nama:'IFAN PRANATA',divisi:'OPERATION',subDivisi:'GUDANG CIRACAS',jabatan:'STAF HELPER',status:'RESIGN'}
+  ];
+  const divisi = [
+    {idDivisi:'DC',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG PONCOL',idSubdiv:'GD PCL',idManager:'800002'},
+    {idDivisi:'DC',divisi:'DISTRIBUTION CENTER',subDivisi:'GUDANG NAGOYA',idSubdiv:'GD NGY',idManager:'800002'},
+    {idDivisi:'OPR',divisi:'OPERATION',subDivisi:'GUDANG CIRACAS',idSubdiv:'GD CRS',idManager:'900025'},
+    {idDivisi:'HO',divisi:'HEAD OFFICE',subDivisi:'HR',idSubdiv:'HR',idManager:'1000000'},
+    {idDivisi:'HO',divisi:'HEAD OFFICE',subDivisi:'IT',idSubdiv:'IT',idManager:'1000000'}
+  ];
+  let seq = 7;
+  const headers = [
+    {idDok:'OT/HO/2026/06/000001',tanggal:'2026-06-06',peminta:'NUR RIZKY HANDAYANI',subDivisi:'GUDANG NAGOYA',jenis:'KIRIMAN',totalKaryawan:2,totalDurasi:5.5,totalNominal:'Rp 92,500',status:'PENDING'},
+    {idDok:'OT/HO/2026/06/000003',tanggal:'2026-06-06',peminta:'NUR RIZKY HANDAYANI',subDivisi:'GUDANG NAGOYA',jenis:'REPACK',totalKaryawan:3,totalDurasi:6,totalNominal:'Rp 105,000',status:'PENDING'},
+    {idDok:'OT/HO/2026/06/000006',tanggal:'2026-06-06',peminta:'NUR RIZKY HANDAYANI',subDivisi:'GUDANG NAGOYA',jenis:'STOCK OPNAME',totalKaryawan:1,totalDurasi:2,totalNominal:'Rp 35,000',status:'APPROVED'},
+    {idDok:'OT/DC/2025/11/000003',tanggal:'2025-11-26',peminta:'MENANG WIJI ASTUTI',subDivisi:'GUDANG NAGOYA',jenis:'BONGKARAN',totalKaryawan:8,totalDurasi:17,totalNominal:'Rp 295,000',status:'APPROVED'},
+    {idDok:'OT/DC/2026/01/000001',tanggal:'2026-01-01',peminta:'MENANG WIJI ASTUTI',subDivisi:'GUDANG NAGOYA',jenis:'STOCK OPNAME',totalKaryawan:1,totalDurasi:3.5,totalNominal:'Rp 57,500',status:'REJECTED'},
+    {idDok:'OT/DC/2026/05/000004',tanggal:'2026-05-14',peminta:'MENANG WIJI ASTUTI',subDivisi:'GUDANG PONCOL',jenis:'KIRIMAN',totalKaryawan:4,totalDurasi:9,totalNominal:'Rp 170,000',status:'APPROVED'}
+  ];
+  const details = {
+    'OT/HO/2026/06/000001':[
+      {nama:'TOPIK KUSWANTO',id:'100009',jabatan:'Staf Supir',jamMulai:'16:00',jamSelesai:'18:00',durasi:2,nominal:'Rp 35,000',alasan:'Pengiriman ke pelabuhan atas nama JOHAN',catatan:'',tanggalLembur:'2026-06-06',lokasi:'GUDANG NAGOYA'},
+      {nama:'YOGA BRAMANTARA',id:'800051',jabatan:'Staf Helper',jamMulai:'17:30',jamSelesai:'21:00',durasi:3.5,nominal:'Rp 57,500',alasan:'Pengiriman ke pelabuhan atas nama JOHAN',catatan:'',tanggalLembur:'2026-06-06',lokasi:'GUDANG NAGOYA'}]
+  };
+  const audit = [
+    {ts:'2026-06-10 17:02:11',user:'IRAWAN',action:'LOGIN',details:'Login berhasil (ADMIN)'},
+    {ts:'2026-06-09 09:15:40',user:'NURIZ',action:'SUBMIT_OT',details:'OT/HO/2026/06/000006 | GUDANG NAGOYA | 1 karyawan | Rp 35,000'},
+    {ts:'2026-06-08 14:21:03',user:'BAMBANG',action:'APPROVE',details:'OT/HO/2026/06/000006'}
+  ];
+  let rates = {firstHour:20000, nextHour:15000};
+  // Simulasi sinkronisasi sheet (utk preview): false = belum sinkron → user DEMO aktif
+  let sheetSynced = false;
+  const DEMO_ADMIN = {username:'DEMO', password:'DEMO123', fullName:'DEMO ADMINISTRATOR', role:'ADMIN',
+    menus:['Dashboard','Form OT','OT History','Approval','Audit Log','Report','Settings']};
+  const rp = n => 'Rp ' + Math.round(n).toLocaleString('en-US');
+  const num = v => parseFloat(String(v).replace(/[^\d.-]/g,'')) || 0;
+  const calc = d => d<=0?0:rates.firstHour + Math.max(0,d-1)*rates.nextHour;
+  const boot = u => ({
+    menus:[{name:'Dashboard'},{name:'Form OT'},{name:'OT History'},{name:'Approval'},{name:'Audit Log'},{name:'Report'},{name:'Settings'}]
+      .filter(m=>u.menus.includes(m.name)),
+    // submenu dari sheet MENU_SETTINGS (IdParent=M7/Settings)
+    submenus:{'Settings':['Umum & User','Data Karyawan','Master Data','Sinkronisasi']},
+    divisi, karyawan: karyawan.filter(k=>k.status==='AKTIF'), rates,
+    jenisLembur:['KIRIMAN','BONGKARAN','STOCK OPNAME','REPACK','LAIN-LAIN']
+  });
+  return {
+    apiDemoStatus(){ return {ok:true, demoActive:!sheetSynced, syncStatus:{synced:sheetSynced, missing:[], userCount:users.length}}; },
+    apiLogin(un,pw){
+      const U=String(un).trim().toUpperCase();
+      // user demo fallback — hanya selama sheet belum tersinkronisasi
+      if(U===DEMO_ADMIN.username){
+        if(sheetSynced) return {ok:false,error:'Username atau password salah'};
+        if(String(pw).trim()!==DEMO_ADMIN.password) return {ok:false,error:'Username atau password salah'};
+        const user={...DEMO_ADMIN, isDemo:true};
+        audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:'DEMO',action:'LOGIN',details:'Login DEMO ADMIN (sheet belum tersinkronisasi)'});
+        return {ok:true,token:'demo',user,bootstrap:boot(user),demoActive:true};
+      }
+      const u = users.find(x=>x.Username.toUpperCase()===U && x.Password===String(pw).trim());
+      if(!u) return {ok:false,error:'Username atau password salah'};
+      const user = {username:u.Username,fullName:u.FullName,role:u.Role,menus:u.AksesMenu.split(',').map(s=>s.trim())};
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:u.Username,action:'LOGIN',details:'Login berhasil ('+u.Role+')'});
+      return {ok:true,token:'demo',user,bootstrap:boot(user),demoActive:!sheetSynced};
+    },
+    apiMarkSynced(){ sheetSynced=true; return {ok:true, demoActive:false}; },
+    apiLogout(){return{ok:true}},
+    apiDashboard(){
+      const kpi={total:0,pending:0,approved:0,rejected:0,totalDurasi:0,totalNominal:0};
+      const byMonth={},byStatus={},byJenis={};
+      headers.forEach(h=>{kpi.total++;
+        if(h.status==='PENDING')kpi.pending++; if(h.status==='APPROVED')kpi.approved++; if(h.status==='REJECTED')kpi.rejected++;
+        kpi.totalDurasi+=h.totalDurasi; kpi.totalNominal+=num(h.totalNominal);
+        const m=h.tanggal.slice(0,7); byMonth[m]=(byMonth[m]||0)+h.totalDurasi;
+        byStatus[h.status]=(byStatus[h.status]||0)+1; byJenis[h.jenis]=(byJenis[h.jenis]||0)+1;});
+      return {ok:true,kpi,byMonth,byStatus,byJenis,topKaryawan:[{nama:'TOPIK KUSWANTO',jam:12},{nama:'YOGA BRAMANTARA',jam:9.5},{nama:'M SUJAI',jam:8},{nama:'MIRWAN',jam:6},{nama:'SAEFULOH',jam:4}]};
+    },
+    apiHistory(f){f=f||{};let d=[...headers];
+      if(f.status)d=d.filter(x=>x.status===f.status);
+      if(f.q){const q=f.q.toUpperCase();d=d.filter(x=>(x.idDok+x.peminta+x.subDivisi+x.jenis).toUpperCase().includes(q));}
+      d.sort((a,b)=>b.idDok.localeCompare(a.idDok));
+      const p=f.page||1,s=10;
+      return {ok:true,total:d.length,page:p,pages:Math.max(1,Math.ceil(d.length/s)),rows:d.slice((p-1)*s,p*s)};
+    },
+    apiDocDetail(id){return {ok:true,idDok:id,details:details[id]||[{nama:'(demo) data detail',id:'-',jabatan:'-',jamMulai:'-',jamSelesai:'-',durasi:0,nominal:'-',alasan:'Detail tersedia di mode live GSheet',catatan:'',tanggalLembur:'',lokasi:''}]};},
+    apiSubmitOT(p){
+      const id='OT/DC/2026/06/'+String(seq++).padStart(6,'0');
+      let td=0,tn=0;
+      const det=p.rows.map(r=>{const d=num(r.durasi),n=calc(d);td+=d;tn+=n;
+        return {nama:r.nama,id:r.id,jabatan:r.jabatan,jamMulai:r.jamMulai,jamSelesai:r.jamSelesai,durasi:d,nominal:rp(n),alasan:p.alasan,catatan:'',tanggalLembur:p.tanggalLembur,lokasi:p.lokasiLembur||p.subDivisi};});
+      details[id]=det;
+      headers.unshift({idDok:id,tanggal:p.tanggalLembur,peminta:STATE.user.fullName,subDivisi:p.subDivisi,jenis:p.jenisLembur,totalKaryawan:p.rows.length,totalDurasi:td,totalNominal:rp(tn),status:'PENDING'});
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'SUBMIT_OT',details:id+' | '+p.subDivisi+' | '+p.rows.length+' karyawan | '+rp(tn)});
+      return {ok:true,idDok:id,totalNominal:rp(tn),totalDurasi:td};
+    },
+    apiApprovalQueue(){return {ok:true,rows:headers.filter(h=>h.status==='PENDING')};},
+    apiApprove(id,c){const h=headers.find(x=>x.idDok===id);if(h)h.status='APPROVED';
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'APPROVE',details:id});return{ok:true};},
+    apiReject(id,c){const h=headers.find(x=>x.idDok===id);if(h)h.status='REJECTED';
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'REJECT',details:id+' | '+c});return{ok:true};},
+    apiRevisi(id,c){const h=headers.find(x=>x.idDok===id);if(h)h.status='REVISI';
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'REVISI',details:id+' | '+c});return{ok:true};},
+    apiCancel(id){const h=headers.find(x=>x.idDok===id);if(h)h.status='CANCELLED';return{ok:true};},
+    apiAuditLog(p){p=p||1;const s=15;return {ok:true,total:audit.length,page:p,pages:Math.max(1,Math.ceil(audit.length/s)),rows:audit.slice((p-1)*s,p*s)};},
+    apiReport(g){
+      const keyFn={subdivisi:h=>h.subDivisi,jenis:h=>h.jenis,bulan:h=>h.tanggal.slice(0,7),status:h=>h.status}[g||'subdivisi'];
+      const agg={};headers.forEach(h=>{const k=keyFn(h);if(!agg[k])agg[k]={key:k,dok:0,karyawan:0,durasi:0,nominal:0};
+        agg[k].dok++;agg[k].karyawan+=h.totalKaryawan;agg[k].durasi+=h.totalDurasi;agg[k].nominal+=num(h.totalNominal);});
+      return {ok:true,rows:Object.values(agg).sort((a,b)=>b.nominal-a.nominal)};
+    },
+    apiUsers(){return {ok:true,rows:users.map(u=>({username:u.Username,fullName:u.FullName,role:u.Role,aksesMenu:u.AksesMenu}))};},
+    apiSaveUser(d,isNew){
+      if(isNew){if(users.find(u=>u.Username.toUpperCase()===d.username.toUpperCase()))throw new Error('Username sudah ada');
+        users.push({Username:d.username,Password:d.password,FullName:d.fullName,Role:d.role,AksesMenu:d.aksesMenu});}
+      else{const u=users.find(x=>x.Username.toUpperCase()===d.username.toUpperCase());if(!u)throw new Error('User tidak ditemukan');
+        Object.assign(u,{FullName:d.fullName,Role:d.role,AksesMenu:d.aksesMenu});if(d.password)u.Password=d.password;}
+      return{ok:true};},
+    apiDeleteUser(un){const i=users.findIndex(u=>u.Username.toUpperCase()===un.toUpperCase());if(i>-1)users.splice(i,1);return{ok:true};},
+    apiSaveRates(r){rates={firstHour:num(r.firstHour),nextHour:num(r.nextHour)};return{ok:true,rates};},
+    /* ---- Data Karyawan CRUD (soft delete via Status) ---- */
+    apiKaryawanList(f){f=f||{};let rows=karyawan.map(k=>({...k}));
+      if(f.status)rows=rows.filter(r=>r.status===f.status.toUpperCase());
+      if(f.q){const q=f.q.toUpperCase();rows=rows.filter(r=>(r.nik+r.id+r.nama+r.subDivisi+r.jabatan).toUpperCase().includes(q));}
+      const p=f.page||1,s=10;
+      return {ok:true,total:rows.length,page:p,pages:Math.max(1,Math.ceil(rows.length/s)),rows:rows.slice((p-1)*s,p*s)};},
+    apiSaveKaryawan(d,isNew){
+      const i=karyawan.findIndex(k=>k.id===d.id);
+      if(isNew){if(i>-1)throw new Error('IdKaryawan sudah terdaftar: '+d.id);
+        karyawan.push({nik:d.nik||'',id:d.id,nama:d.nama.toUpperCase(),divisi:d.divisi||'',subDivisi:d.subDivisi||'',jabatan:d.jabatan||'',status:(d.status||'AKTIF').toUpperCase()});}
+      else{if(i<0)throw new Error('Karyawan tidak ditemukan');
+        karyawan[i]={...karyawan[i],nik:d.nik||'',nama:d.nama.toUpperCase(),divisi:d.divisi||'',subDivisi:d.subDivisi||'',jabatan:d.jabatan||'',status:(d.status||'AKTIF').toUpperCase()};}
+      if(STATE.boot)STATE.boot.karyawan=karyawan.filter(k=>k.status==='AKTIF');
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:isNew?'KARYAWAN_CREATE':'KARYAWAN_UPDATE',details:d.id+' | '+d.nama});
+      return {ok:true};},
+    apiToggleKaryawan(id){
+      const k=karyawan.find(x=>x.id===id);if(!k)throw new Error('Karyawan tidak ditemukan');
+      k.status=k.status==='AKTIF'?'RESIGN':'AKTIF';
+      if(STATE.boot)STATE.boot.karyawan=karyawan.filter(x=>x.status==='AKTIF');
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:k.status==='RESIGN'?'KARYAWAN_RESIGN':'KARYAWAN_REAKTIF',details:id});
+      return {ok:true,status:k.status};},
+    /* ---- Sinkronisasi (mock) ---- */
+    _sync:{ssId:'1MEx2dqHuV21QPVplJGgcX1obzvFuPgUqjbw1CkXpAMk',isOverride:false,webAppUrl:''},
+    apiSyncInfo(){
+      const s=this._sync;
+      const mk=(sheet,desc,rows,opt)=>({sheet,desc,exists:true,rows,optional:!!opt});
+      return {ok:true,connected:true,ssId:s.ssId,isOverride:s.isOverride,
+        ssName:'OVERTIME SYSTEM DB',ssUrl:'https://docs.google.com/spreadsheets/d/'+s.ssId,
+        webAppUrl:s.webAppUrl,synced:sheetSynced,demoActive:!sheetSynced,
+        checklist:[mk('USER_ROLE','User & role login',users.length),mk('MENU_SETTINGS','Menu & submenu dinamis',9),
+          mk('APPROVAL_ROLE','Matriks approval',3),mk('DIVISI_ROLE','Master divisi/sub divisi',divisi.length),
+          mk('DATA_KARYAWAN','Master karyawan',karyawan.length),mk('OT_HEADER','Dokumen lembur (header)',headers.length),
+          mk('OT_DETAIL','Rincian lembur per karyawan',12),mk('REPORT','Output report (opsional)',2,true),
+          mk('AUDIT_LOG','Audit trail',audit.length)]};
+    },
+    apiSyncConnect(input,webAppUrl){
+      if(webAppUrl!==undefined&&webAppUrl!==null){
+        const w=String(webAppUrl).trim();
+        if(w&&!/^https:\/\/script\.google\.com\//.test(w))throw new Error('Web App URL tidak valid (harus diawali https://script.google.com/)');
+        this._sync.webAppUrl=w;
+      }
+      if(input&&String(input).trim()){
+        const m=String(input).match(/\/spreadsheets\/d\/([A-Za-z0-9_-]{20,})/);
+        const id=m?m[1]:(/^[A-Za-z0-9_-]{20,}$/.test(String(input).trim())?String(input).trim():'');
+        if(!id)throw new Error('URL/ID Spreadsheet tidak valid');
+        this._sync.ssId=id;this._sync.isOverride=true;sheetSynced=true;
+        audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'SYNC_CONNECT',details:'Terkoneksi ke spreadsheet: '+id});
+      }
+      return this.apiSyncInfo();
+    },
+    apiSyncReset(){this._sync.ssId='1MEx2dqHuV21QPVplJGgcX1obzvFuPgUqjbw1CkXpAMk';this._sync.isOverride=false;
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'SYNC_RESET',details:'Kembali ke spreadsheet default'});
+      return this.apiSyncInfo();},
+    apiSyncTest(){audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'SYNC_TEST',details:'Tes koneksi & refresh cache'});
+      return this.apiSyncInfo();},
+    apiDiagnose(){
+      const mk=(key,headers,n,sample)=>({key,realName:key,ok:true,rowCount:n,headers,canonHeaders:headers,sample:JSON.stringify(sample).slice(0,300)});
+      return {ok:true,ssId:this._sync.ssId,sheets:[
+        mk('USER_ROLE',['Username','Password','FullName','Role','AksesMenu'],users.length,users[0]),
+        mk('MENU_SETTINGS',['IdMenu','MenuName','IdParent','RoutePath','OrderIndex','IsActive'],this._menus.length,this._menus[0]),
+        mk('APPROVAL_ROLE',['IdMatrix','IdDivisi','ApprovalLevel','IdApproval'],this._approvals.length,this._approvals[0]),
+        mk('DIVISI_ROLE',['IdDivisi','Divisi','SubDivisi','IdSubdiv','IdManager'],divisi.length,divisi[0]),
+        mk('DATA_KARYAWAN',['Nik','IdKaryawan','NamaKaryawan','Divisi','SubDivisi','Jabatan','Status'],karyawan.length,karyawan[0]),
+        mk('OT_HEADER',['IdDok','TanggalLembur','NamaPeminta','SubDivisi','JenisLembur','TotalKaryawan','TotalDurasi','TotalNominal','StatusDokumen'],headers.length,headers[0]),
+        mk('OT_DETAIL',['IdDok','TanggalPengajuan','TanggalLembur','NamaPeminta','LokasiLembur','SubDivisi','JenisLembur','NamaKaryawan','IdKaryawan','Jabatan','JamMulai','JamSelesai','DurasiLembur','Nominal','StatusDokumen','AlasanLembur','CatatanManager'],12,details['OT/HO/2026/06/000001'][0]),
+        mk('AUDIT_LOG',['Timestamp','User','Action','Details'],audit.length,audit[0])]};},
+    /* ---- Master Data: MENU / APPROVAL_ROLE / DIVISI_ROLE ---- */
+    _menus:[
+      {idMenu:'M1',menuName:'Dashboard',idParent:'',routePath:'/dashboard',orderIndex:1,isActive:true},
+      {idMenu:'M2',menuName:'Form OT',idParent:'',routePath:'/form-ot',orderIndex:2,isActive:true},
+      {idMenu:'M3',menuName:'OT History',idParent:'',routePath:'/ot-history',orderIndex:3,isActive:true},
+      {idMenu:'M4',menuName:'Approval',idParent:'',routePath:'/approval',orderIndex:4,isActive:true},
+      {idMenu:'M5',menuName:'Audit Log',idParent:'',routePath:'/audit-log',orderIndex:5,isActive:true},
+      {idMenu:'M6',menuName:'Report',idParent:'',routePath:'/report',orderIndex:6,isActive:true},
+      {idMenu:'M7',menuName:'Settings',idParent:'',routePath:'/settings',orderIndex:7,isActive:true},
+      {idMenu:'M7A',menuName:'Umum & User',idParent:'M7',routePath:'/settings/umum',orderIndex:1,isActive:true},
+      {idMenu:'M7B',menuName:'Data Karyawan',idParent:'M7',routePath:'/settings/karyawan',orderIndex:2,isActive:true},
+      {idMenu:'M7C',menuName:'Master Data',idParent:'M7',routePath:'/settings/master',orderIndex:3,isActive:true},
+      {idMenu:'M7D',menuName:'Sinkronisasi',idParent:'M7',routePath:'/settings/sinkronisasi',orderIndex:4,isActive:true}],
+    _approvals:[
+      {idMatrix:'M001',idDivisi:'DC',approvalLevel:1,idApproval:'800002'},
+      {idMatrix:'M002',idDivisi:'OPR',approvalLevel:2,idApproval:'900025'},
+      {idMatrix:'M003',idDivisi:'HO',approvalLevel:3,idApproval:'1000000'}],
+    apiMasterData(){return {ok:true,menus:this._menus.map(m=>({...m})),approvals:this._approvals.map(a=>({...a})),divisi:divisi.map(d=>({...d}))};},
+    apiSaveMenu(d,isNew){
+      const i=this._menus.findIndex(m=>m.idMenu.toUpperCase()===d.idMenu.toUpperCase());
+      if(isNew){if(i>-1)throw new Error('IdMenu sudah ada: '+d.idMenu);this._menus.push({...d});}
+      else{if(i<0)throw new Error('Menu tidak ditemukan');this._menus[i]={...d};}
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:isNew?'MENU_CREATE':'MENU_UPDATE',details:d.idMenu+' | '+d.menuName});
+      return {ok:true};},
+    apiToggleMenu(id){
+      const m=this._menus.find(x=>x.idMenu===id);if(!m)throw new Error('Menu tidak ditemukan');
+      m.isActive=!m.isActive;
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:m.isActive?'MENU_ENABLE':'MENU_DISABLE',details:id});
+      return {ok:true,isActive:m.isActive};},
+    apiSaveApproval(d,isNew){
+      const i=this._approvals.findIndex(a=>a.idMatrix.toUpperCase()===d.idMatrix.toUpperCase());
+      if(isNew){if(i>-1)throw new Error('IdMatrix sudah ada: '+d.idMatrix);this._approvals.push({...d});}
+      else{if(i<0)throw new Error('Matrix tidak ditemukan');this._approvals[i]={...d};}
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:isNew?'APPROVAL_CREATE':'APPROVAL_UPDATE',details:d.idMatrix});
+      return {ok:true};},
+    apiDeleteApproval(id){
+      const i=this._approvals.findIndex(a=>a.idMatrix===id);if(i<0)throw new Error('Matrix tidak ditemukan');
+      this._approvals.splice(i,1);
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'APPROVAL_DELETE',details:id});
+      return {ok:true};},
+    apiSaveDivisi(d,isNew,origSub){
+      const find=(idD,sub)=>divisi.findIndex(x=>x.idDivisi.toUpperCase()===idD.toUpperCase()&&x.subDivisi.toUpperCase()===sub.toUpperCase());
+      if(isNew){if(find(d.idDivisi,d.subDivisi)>-1)throw new Error('Kombinasi divisi+sub divisi sudah ada');divisi.push({...d});}
+      else{const i=find(d.idDivisi,origSub||d.subDivisi);if(i<0)throw new Error('Data divisi tidak ditemukan');divisi[i]={...d};}
+      if(STATE.boot)STATE.boot.divisi=divisi;
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:isNew?'DIVISI_CREATE':'DIVISI_UPDATE',details:d.idDivisi+' | '+d.subDivisi});
+      return {ok:true};},
+    apiDeleteDivisi(idD,sub){
+      const i=divisi.findIndex(x=>x.idDivisi===idD&&x.subDivisi===sub);if(i<0)throw new Error('Data divisi tidak ditemukan');
+      divisi.splice(i,1);
+      if(STATE.boot)STATE.boot.divisi=divisi;
+      audit.unshift({ts:new Date().toISOString().slice(0,19).replace('T',' '),user:STATE.user.username,action:'DIVISI_DELETE',details:idD+' | '+sub});
+      return {ok:true};}
+  };
+})();
+
+/* ----------------------- RPC WRAPPER ---------------------------- */
+function rpc(fn, ...args){
+  if (IS_GAS){
+    return new Promise((res, rej)=>{
+      google.script.run
+        .withSuccessHandler(res)
+        .withFailureHandler(e=>{
+          const err=new Error(e.message||String(e));
+          // sesi habis / user demo dinonaktifkan setelah sheet sinkron → paksa logout
+          if(/SESSION_EXPIRED/i.test(err.message)){
+            toast('Sesi berakhir. Silakan login kembali.','warn');
+            doLogout();
+          }
+          rej(err);
+        })
+        [fn](STATE.token, ...args);
+    });
+  }
+  if (IS_REMOTE){
+    return remoteCall(fn, [STATE.token, ...args]).catch(err=>{
+      if(/SESSION_EXPIRED/i.test(err.message)){
+        toast('Sesi berakhir. Silakan login kembali.','warn');
+        doLogout();
+      }
+      throw err;
+    });
+  }
+  // demo mode (token tidak diperlukan)
+  return new Promise((res, rej)=>{
+    setTimeout(()=>{
+      try{ res(MOCK[fn](...args)); }catch(e){ rej(e); }
+    }, 280 + Math.random()*250);
+  });
+}
+
+/* ------------------------- STATE -------------------------------- */
+const STATE = { token:null, user:null, boot:null, route:'Dashboard' };
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp = n => 'Rp ' + Math.round(n).toLocaleString('en-US');
+
+function toast(msg, type='ok'){
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  const ic = type==='ok'?'✅':type==='err'?'⛔':'⚠️';
+  t.innerHTML = '<span style="font-size:17px">'+ic+'</span><span>'+esc(msg)+'</span>';
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.transition='all .4s'; t.style.opacity='0'; t.style.transform='translateX(40px)'; setTimeout(()=>t.remove(),400); }, 3500);
+}
+function openModal(html, lg){ $('#modalBox').className='modal'+(lg?' lg':''); $('#modalBox').innerHTML=html; $('#modalBg').style.display='flex'; }
+function closeModal(){ $('#modalBg').style.display='none'; }
+$('#modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+function skeletonRows(n, cols){
+  let h='';
+  for(let i=0;i<n;i++){ h+='<tr>'; for(let c=0;c<cols;c++) h+='<td><div class="skeleton" style="width:'+(40+Math.random()*50)+'%"></div></td>'; h+='</tr>'; }
+  return h;
+}
+function animateNum(el, target, fmt){
+  const dur=900, t0=performance.now();
+  const step=t=>{ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent = fmt(target*e);
+    if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* ------------------------- AUTH --------------------------------- */
+/* Hint user DEMO di halaman login — dinamis:
+   muncul hanya jika sheet BELUM tersinkronisasi (demoActive=true),
+   otomatis HILANG begitu semua sheet sudah sinkron. */
+/* Chip kredensial: KLIK → username & password terisi otomatis */
+function credChip(un, pw, label, cls){
+  return '<span class="cred-chip '+(cls||'')+'" onclick="fillCred(\''+un+'\',\''+pw+'\')" title="Klik untuk isi otomatis">'+label+'</span>';
+}
+function fillCred(un, pw){
+  const iu=$('#inUser'), ip=$('#inPass');
+  iu.value=un; ip.value=pw;
+  $('#loginErr').style.display='none';
+  // efek visual singkat agar terlihat terisi
+  [iu,ip].forEach(el=>{ el.style.transition='background .3s'; el.style.background='var(--pri-l)'; setTimeout(()=>el.style.background='',600); });
+  toast('Kredensial '+un+' terisi — klik Masuk','ok');
+  $('#btnLogin').focus();
+}
+/* Konfigurasi backend URL (mode hosting eksternal: GitHub Pages dll) */
+function toggleApiCfg(){
+  const box=$('#apiCfg');
+  box.style.display = box.style.display==='none'?'block':'none';
+  $('#apiUrlInput').value = getApiUrl();
+  $('#apiStatus').textContent = getApiUrl() ? 'Tersambung ke: '+getApiUrl().slice(0,60)+'…' : 'Belum dikonfigurasi — aplikasi berjalan dalam MODE DEMO';
+}
+function saveApiUrl(){
+  const u=$('#apiUrlInput').value.trim();
+  if(!u) return toast('Masukkan Web App URL','warn');
+  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)) return toast('URL harus dari script.google.com (akhiran /exec)','warn');
+  setApiUrl(u);
+  toast('Backend tersimpan — memuat ulang…');
+  setTimeout(()=>location.reload(), 800);
+}
+function clearApiUrl(){
+  setApiUrl('');
+  toast('Koneksi backend dihapus — kembali ke MODE DEMO','warn');
+  setTimeout(()=>location.reload(), 800);
+}
+async function refreshDemoHint(){
+  // tombol konfigurasi backend hanya relevan saat TIDAK dibuka dari Apps Script
+  if(!IS_GAS) $('#apiCfgToggle').style.display='block';
+  try{
+    let r;
+    if(IS_GAS){
+      r = await new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message))).apiDemoStatus(false));
+    } else if(IS_REMOTE){
+      r = await remoteCall('apiDemoStatus',[false]);
+    } else r = MOCK.apiDemoStatus();
+    const el=$('#demoHint');
+    if(r.demoActive){
+      el.innerHTML='🛟 <b>SETUP MODE</b> — sheet belum tersinkronisasi penuh.<br>Klik untuk isi otomatis:<br>'+
+        credChip('DEMO','DEMO123','🛟 DEMO · Admin Sementara','demo')+
+        '<br><span style="color:var(--warn)">Akun ini otomatis nonaktif & tersembunyi setelah semua sheet tersinkronisasi.</span>'+
+        (IS_DEMO?'<br><br>🔓 Mode preview — user GSheet:<br>'+
+          credChip('IRAWAN','609215','👑 IRAWAN · Admin')+
+          credChip('BAMBANG','609215','✅ BAMBANG · Manager')+
+          credChip('TUTI','111111','👤 TUTI · User'):'');
+      el.style.display='block';
+    } else if(IS_REMOTE){
+      el.innerHTML='🌐 Terhubung ke backend Apps Script — login dengan akun GSheet Anda.';
+      el.style.display='block';
+    } else {
+      el.innerHTML = IS_DEMO ? '🔓 Mode preview — klik untuk isi otomatis:<br>'+
+        credChip('IRAWAN','609215','👑 IRAWAN · Admin')+
+        credChip('BAMBANG','609215','✅ BAMBANG · Manager')+
+        credChip('TUTI','111111','👤 TUTI · User') : '';
+      el.style.display = el.innerHTML ? 'block' : 'none';
+    }
+  }catch(e){ /* silent */ }
+}
+refreshDemoHint();
+
+function togglePass(){ const i=$('#inPass'); i.type = i.type==='password'?'text':'password'; }
+
+async function doLogin(){
+  const u=$('#inUser').value.trim(), p=$('#inPass').value;
+  if(!u||!p){ showLoginErr('Username dan password wajib diisi'); return; }
+  const btn=$('#btnLogin'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Memverifikasi...';
+  try{
+    let r;
+    if(IS_GAS){
+      r = await new Promise((res,rej)=>google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message))).apiLogin(u,p));
+    } else if(IS_REMOTE){
+      r = await remoteCall('apiLogin',[u,p]);
+    } else r = await new Promise(res=>setTimeout(()=>res(MOCK.apiLogin(u,p)),500));
+    if(!r.ok){ showLoginErr(r.error); return; }
+    STATE.token=r.token; STATE.user=r.user; STATE.boot=r.bootstrap;
+    enterApp();
+  }catch(e){ showLoginErr(e.message); }
+  finally{ btn.disabled=false; btn.innerHTML='Masuk &nbsp;→'; }
+}
+function showLoginErr(m){ const el=$('#loginErr'); el.textContent=m; el.style.display='block'; }
+function doLogout(){
+  rpc('apiLogout').catch(()=>{});
+  STATE.token=null; STATE.user=null;
+  const bn=$('#demoBanner'); if(bn) bn.remove();
+  $('#app').style.display='none'; $('#loginPage').style.display='flex';
+  $('#inPass').value='';
+  refreshDemoHint();
+  toast('Anda telah logout','warn');
+}
+/* Simulasi flow (mode preview): tandai sheet tersinkronisasi →
+   user DEMO langsung di-logout & hint demo hilang dari halaman login. */
+async function simulateSync(){
+  if(!IS_DEMO) return;
+  MOCK.apiMarkSynced();
+  toast('Semua sheet tersinkronisasi — user DEMO dinonaktifkan','warn');
+  setTimeout(()=>{ doLogout(); $('#inUser').value=''; }, 900);
+}
+
+/* ---------------------- APP SHELL ------------------------------- */
+const ICONS = {
+  'Dashboard':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  'Form OT':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  'OT History':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  'Approval':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  'Audit Log':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+  'Report':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
+  'Settings':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'
+};
+
+function enterApp(){
+  $('#loginPage').style.display='none'; $('#app').style.display='block';
+  // Banner khusus sesi user DEMO
+  const old=$('#demoBanner'); if(old) old.remove();
+  if(STATE.user.isDemo){
+    const bn=document.createElement('div');
+    bn.id='demoBanner';
+    bn.style.cssText='background:linear-gradient(90deg,#fef3c7,#fde68a);color:#92400e;padding:9px 16px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-bottom:1px solid #fcd34d';
+    bn.innerHTML='🛟 Anda login sebagai <b>USER DEMO (ADMIN)</b> — akun ini otomatis nonaktif & tersembunyi setelah seluruh sheet tersinkronisasi. Segera buat user resmi di menu Settings.'+
+      (IS_DEMO?' <button class="btn btn-sm" style="background:#92400e;color:#fff;margin-left:auto" onclick="simulateSync()">✅ Simulasi: Tandai Sheet Tersinkronisasi</button>':'');
+    document.querySelector('.main').insertBefore(bn, document.querySelector('.topbar'));
+  }
+  $('#uName').textContent = STATE.user.fullName;
+  $('#uRole').textContent = STATE.user.role;
+  $('#uAvatar').textContent = STATE.user.fullName.split(' ').map(w=>w[0]).slice(0,2).join('');
+  $('#connLbl').textContent = IS_GAS ? 'Terhubung GSheet' : (IS_REMOTE ? 'Terhubung API (Hosting Eksternal)' : 'Mode Demo');
+  renderNav();
+  navigate('Dashboard');
+  toast('Selamat datang, ' + STATE.user.fullName + '! 👋');
+}
+function renderNav(){
+  const subs = STATE.boot.submenus || {};
+  $('#sbNav').innerHTML = STATE.boot.menus.map(m=>{
+    const children = subs[m.name];
+    if(children && children.length){
+      return '<button class="sb-item" data-m="'+esc(m.name)+'" onclick="toggleSub(this,\''+esc(m.name)+'\')">'+(ICONS[m.name]||'')+'<span>'+esc(m.name)+'</span><span class="car">▶</span></button>'+
+        '<div class="sb-sub" data-p="'+esc(m.name)+'">'+children.map(c=>
+          '<button class="sb-subitem" data-m="'+esc(m.name)+'::'+esc(c)+'" onclick="navigate(\''+esc(m.name)+'::'+esc(c)+'\')">'+esc(c)+'</button>').join('')+'</div>';
+    }
+    return '<button class="sb-item" data-m="'+esc(m.name)+'" onclick="navigate(\''+esc(m.name)+'\')">'+(ICONS[m.name]||'')+'<span>'+esc(m.name)+'</span></button>';
+  }).join('');
+}
+function toggleSub(btn, name){
+  const sub=document.querySelector('.sb-sub[data-p="'+name+'"]');
+  const open=!sub.classList.contains('open');
+  sub.classList.toggle('open',open);
+  btn.classList.toggle('expanded',open);
+  // klik parent pertama kali → langsung buka submenu pertama
+  if(open && !document.querySelector('.sb-subitem.active')){
+    const first=sub.querySelector('.sb-subitem');
+    if(first) navigate(first.dataset.m);
+  }
+}
+function toggleSide(force){
+  const sb=$('#sidebar'), ov=$('#overlay');
+  const open = force!==undefined?force:!sb.classList.contains('open');
+  sb.classList.toggle('open',open); ov.style.display=open?'block':'none';
+}
+function navigate(menu){
+  STATE.route=menu; toggleSide(false);
+  // "Parent::Sub" → render submenu page
+  const [root, sub] = menu.split('::');
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.toggle('active', b.dataset.m===menu || (sub && b.dataset.m===root)));
+  document.querySelectorAll('.sb-subitem').forEach(b=>b.classList.toggle('active', b.dataset.m===menu));
+  if(sub){ // pastikan submenu parent terbuka
+    const subBox=document.querySelector('.sb-sub[data-p="'+root+'"]');
+    const parentBtn=document.querySelector('.sb-item[data-m="'+root+'"]');
+    if(subBox) subBox.classList.add('open');
+    if(parentBtn) parentBtn.classList.add('expanded');
+  }
+  $('#pageTitle').textContent = sub ? root+' › '+sub : menu;
+  $('#content').innerHTML='';
+  resolvePage(root, sub)();
+}
+/* Resolver halaman TOLERAN: nama menu/submenu dari sheet MENU_SETTINGS
+   boleh beda kapital/spasi/ejaan — dicocokkan via kata kunci.
+   Contoh: "DATA KARYAWAN", "Master data", "SINKRONISASI SHEET",
+   "Sync", "Menu Setting" → tetap diarahkan ke halaman yang benar. */
+function resolvePage(root, sub){
+  const N = s => String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const r = N(root);
+  // halaman submenu Settings (cek kata kunci pada nama submenu)
+  if (sub){
+    const s = N(sub);
+    if (r.includes('SETTING') || r.includes('PENGATURAN')){
+      if (s.includes('KARYAWAN') || s.includes('EMPLOYEE'))                 return pageKaryawan;
+      if (s.includes('MASTER') || s.includes('MENU') || s.includes('DIVISI') || s.includes('APPROVAL')) return pageMaster;
+      if (s.includes('SINKRON') || s.includes('SYNC') || s.includes('KONEKSI')) return pageSync;
+      return pageSettings; // Umum & User / lainnya
+    }
+  }
+  // menu utama (toleran juga)
+  if (r.includes('DASHBOARD')) return pageDashboard;
+  if (r.includes('FORM'))      return pageFormOT;
+  if (r.includes('HISTORY') || r.includes('RIWAYAT')) return pageHistory;
+  if (r.includes('APPROVAL') || r.includes('PERSETUJUAN')) return pageApproval;
+  if (r.includes('AUDIT'))     return pageAudit;
+  if (r.includes('REPORT') || r.includes('LAPORAN')) return pageReport;
+  if (r.includes('SETTING') || r.includes('PENGATURAN')) return pageSettings;
+  return pageDashboard;
+}
+
+/* ---------------------- PAGE: DASHBOARD ------------------------- */
+async function pageDashboard(){
+  const c=$('#content');
+  c.innerHTML = `
+    <div class="grid g-kpi" id="kpis">
+      ${[0,1,2,3,4].map(i=>'<div class="card kpi anim anim-d'+i+'"><div class="skeleton" style="width:42px;height:42px;border-radius:12px;margin-bottom:12px"></div><div class="skeleton" style="width:60%;height:22px"></div><div class="skeleton" style="width:80%;margin-top:8px"></div></div>').join('')}
+    </div>
+    <div class="grid g-2" style="margin-top:18px">
+      <div class="card anim anim-d2"><div class="sec-title">📈 Tren Jam Lembur / Bulan</div><div id="chBar"><div class="skeleton" style="height:160px;border-radius:12px"></div></div></div>
+      <div class="card anim anim-d3"><div class="sec-title">🧩 Komposisi Status & Jenis</div><div id="chLegend"><div class="skeleton" style="height:160px;border-radius:12px"></div></div></div>
+    </div>
+    <div class="card anim anim-d4" style="margin-top:18px"><div class="sec-title">🏆 Top 5 Karyawan (Jam Lembur)</div><div id="topKar"><div class="skeleton" style="height:90px;border-radius:12px"></div></div></div>`;
+  try{
+    const r = await rpc('apiDashboard');
+    const k=r.kpi;
+    const kpiDefs=[
+      {l:'Total Dokumen',v:k.total,c:'#4f46e5',bg:'var(--pri-l)',ic:'📄',fmt:v=>Math.round(v)},
+      {l:'Pending',v:k.pending,c:'#d97706',bg:'var(--warn-l)',ic:'⏳',fmt:v=>Math.round(v)},
+      {l:'Approved',v:k.approved,c:'#059669',bg:'var(--ok-l)',ic:'✅',fmt:v=>Math.round(v)},
+      {l:'Total Jam',v:k.totalDurasi,c:'#0284c7',bg:'var(--info-l)',ic:'⏱',fmt:v=>(Math.round(v*10)/10)+' jam'},
+      {l:'Total Nominal',v:k.totalNominal,c:'#7c3aed',bg:'#f3e8ff',ic:'💰',fmt:v=>rp(v)}
+    ];
+    $('#kpis').innerHTML = kpiDefs.map((d,i)=>
+      '<div class="card kpi anim anim-d'+i+'" style="color:'+d.c+'"><div class="ic" style="background:'+d.bg+';font-size:19px">'+d.ic+'</div><div class="v" id="kv'+i+'" style="color:var(--ink)">0</div><div class="l">'+d.l+'</div></div>').join('');
+    kpiDefs.forEach((d,i)=>animateNum($('#kv'+i), d.v, d.fmt));
+
+    // bar chart bulan
+    const months=Object.keys(r.byMonth).sort().slice(-8);
+    const max=Math.max(1,...months.map(m=>r.byMonth[m]));
+    $('#chBar').innerHTML = months.length?'<div class="bar-chart">'+months.map((m,i)=>
+      '<div class="bar-col"><span class="bar-val">'+(Math.round(r.byMonth[m]*10)/10)+'</span><div class="bar" style="height:'+Math.max(8,r.byMonth[m]/max*130)+'px;animation-delay:'+(i*.07)+'s" title="'+m+': '+r.byMonth[m]+' jam"></div><span class="bar-lbl">'+m.slice(2)+'</span></div>').join('')+'</div>'
+      :'<div class="empty">Belum ada data</div>';
+
+    // legend status + jenis
+    const colors=['#4f46e5','#059669','#d97706','#dc2626','#0284c7','#7c3aed','#64748b'];
+    const mkLegend=(obj,title)=>{ const ks=Object.keys(obj); const tot=ks.reduce((s,k)=>s+obj[k],0)||1;
+      return '<div style="font-size:11px;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.7px;margin:6px 0 8px">'+title+'</div><div class="legend">'+
+        ks.map((k,i)=>'<div class="row"><span class="sw" style="background:'+colors[i%colors.length]+'"></span>'+esc(k)+
+        '<div style="flex:1;height:7px;background:#f1f5f9;border-radius:99px;margin:0 4px;overflow:hidden"><div style="height:100%;width:'+(obj[k]/tot*100)+'%;background:'+colors[i%colors.length]+';border-radius:99px;transition:width 1s"></div></div><b>'+obj[k]+'</b></div>').join('')+'</div>'; };
+    $('#chLegend').innerHTML = mkLegend(r.byStatus,'Status Dokumen') + '<div style="height:14px"></div>' + mkLegend(r.byJenis,'Jenis Lembur');
+
+    // top karyawan
+    const maxJ=Math.max(1,...r.topKaryawan.map(t=>t.jam));
+    $('#topKar').innerHTML = r.topKaryawan.length? r.topKaryawan.map((t,i)=>
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:11px"><div class="avatar" style="width:32px;height:32px;font-size:12px;background:linear-gradient(135deg,'+['#4f46e5,#7c3aed','#0284c7,#06b6d4','#059669,#34d399','#d97706,#fbbf24','#dc2626,#f87171'][i]+')">'+(i+1)+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">'+esc(t.nama)+'</div><div style="height:7px;background:#f1f5f9;border-radius:99px;margin-top:4px;overflow:hidden"><div style="height:100%;width:'+(t.jam/maxJ*100)+'%;background:linear-gradient(90deg,var(--pri),var(--vio));border-radius:99px;transition:width 1s"></div></div></div>'+
+      '<b style="color:var(--pri)">'+t.jam+' jam</b></div>').join('') : '<div class="empty">Belum ada data</div>';
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------------------- PAGE: FORM OT --------------------------- */
+let formRows = [];
+function pageFormOT(){
+  formRows = [];
+  const b=STATE.boot;
+  const subdivs=[...new Set(b.divisi.map(d=>d.subDivisi))];
+  const subOpts = subdivs.map(s=>'<option>'+esc(s)+'</option>').join('');
+  $('#content').innerHTML = `
+  <div class="card anim">
+    <div class="sec-title">📝 Form Pengajuan Lembur</div>
+    <div class="fhead">
+      <!-- Baris 1: Tanggal Lembur + Lokasi Lembur -->
+      <div class="grid g-2">
+        <div class="fld"><label>Tanggal Lembur *</label><input type="date" id="fTgl" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="fld"><label>Lokasi Lembur *</label><select id="fLok">${subOpts}</select></div>
+      </div>
+      <!-- Baris 2: Sub Divisi + Jenis Lembur -->
+      <div class="grid g-2">
+        <div class="fld"><label>Sub Divisi *</label><select id="fSub">${subOpts}</select></div>
+        <div class="fld"><label>Jenis Lembur *</label>
+          <select id="fJenis" onchange="toggleJenisDetail()">${b.jenisLembur.map(j=>'<option>'+esc(j)+'</option>').join('')}</select>
+          <div id="fJenisDetailWrap" class="form-hidden" style="margin-top:9px;animation:fadeUp .3s both">
+            <input id="fJenisDetail" placeholder="Detail lain-lain, mis: REPACK, BERSIH GUDANG..." style="width:100%;padding:9px 11px;border:1.5px solid var(--warn);border-radius:11px;outline:none;background:var(--warn-l);font-size:13px">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fld"><label>Alasan Lembur *</label><textarea id="fAlasan" rows="2" placeholder="Jelaskan alasan/keperluan lembur..." style="width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;outline:none;resize:vertical"></textarea></div>
+    <div class="sec-title" style="margin-top:10px">👥 Daftar Karyawan</div>
+    <div class="det-scroll">
+      <div class="det-head"><span>Nama Karyawan</span><span>Jabatan</span><span>Jam Mulai</span><span>Jam Selesai</span><span>Durasi</span><span>Nominal</span><span></span></div>
+      <div id="detRows"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="addDetRow()">＋ Tambah Karyawan</button>
+    <div class="sum-box">
+      <div class="it"><b id="sumKar">0</b><span>Karyawan</span></div>
+      <div class="it"><b id="sumJam">0</b><span>Total Jam</span></div>
+      <div class="it"><b id="sumNom">Rp 0</b><span>Estimasi Nominal</span></div>
+      <button class="btn btn-pri" style="margin-left:auto;align-self:center" id="btnSubmit" onclick="submitOT()">🚀 Ajukan Lembur</button>
+    </div>
+    <p style="font-size:11.5px;color:var(--ink-3);margin-top:10px">Rate: jam pertama ${rp(b.rates.firstHour)}, jam berikutnya ${rp(b.rates.nextHour)}/jam (pro-rata 0,5 jam). Nominal final dihitung server.</p>
+  </div>`;
+  addDetRow();
+}
+function toggleJenisDetail(){
+  const isLain = $('#fJenis').value.toUpperCase().startsWith('LAIN');
+  $('#fJenisDetailWrap').classList.toggle('form-hidden', !isLain);
+  if(isLain) $('#fJenisDetail').focus();
+}
+function calcNominal(d){ const r=STATE.boot.rates; return d<=0?0:r.firstHour+Math.max(0,d-1)*r.nextHour; }
+function addDetRow(){
+  const idx = formRows.length;
+  formRows.push({nama:'',id:'',jabatan:'',jamMulai:'17:00',jamSelesai:'19:00',durasi:2});
+  const div=document.createElement('div');
+  div.className='det-row'; div.dataset.i=idx;
+  div.innerHTML = `
+    <div style="position:relative"><input placeholder="ketik nama..." oninput="acSearch(this,${idx})" onblur="setTimeout(()=>this.parentNode.querySelector('.ac-list').style.display='none',180)" id="nm${idx}"><div class="ac-list"></div></div>
+    <input placeholder="jabatan" id="jb${idx}" readonly style="background:#f8fafc">
+    <input type="time" id="m1${idx}" value="17:00" onchange="recalcRow(${idx})">
+    <input type="time" id="m2${idx}" value="19:00" onchange="recalcRow(${idx})">
+    <input id="du${idx}" value="2" readonly style="background:#f8fafc;text-align:center;font-weight:700">
+    <input id="no${idx}" value="${rp(calcNominal(2))}" readonly style="background:#f8fafc;font-weight:700;color:var(--pri)">
+    <button class="del" onclick="delDetRow(${idx},this)">✕</button>`;
+  $('#detRows').appendChild(div);
+  updateSummary();
+}
+function delDetRow(i, btn){
+  formRows[i]=null;
+  btn.closest('.det-row').remove();
+  updateSummary();
+}
+function acSearch(input, i){
+  const list = input.parentNode.querySelector('.ac-list');
+  const q = input.value.trim().toUpperCase();
+  formRows[i].nama=input.value; formRows[i].id=''; formRows[i].jabatan='';
+  if(q.length<1){ list.style.display='none'; return; }
+  const hits = STATE.boot.karyawan.filter(k=>k.nama.toUpperCase().includes(q)||k.id.includes(q)).slice(0,8);
+  if(!hits.length){ list.style.display='none'; return; }
+  list.innerHTML = hits.map(k=>'<div onmousedown="pickKar('+i+',\''+esc(k.id)+'\')"><b>'+esc(k.nama)+'</b><small>'+esc(k.id)+' · '+esc(k.jabatan)+' · '+esc(k.subDivisi)+'</small></div>').join('');
+  list.style.display='block';
+}
+function pickKar(i, id){
+  const k = STATE.boot.karyawan.find(x=>x.id===id);
+  if(!k) return;
+  formRows[i].nama=k.nama; formRows[i].id=k.id; formRows[i].jabatan=k.jabatan;
+  $('#nm'+i).value=k.nama; $('#jb'+i).value=k.jabatan;
+  updateSummary();
+}
+function recalcRow(i){
+  const m1=$('#m1'+i).value, m2=$('#m2'+i).value;
+  if(!m1||!m2) return;
+  const [h1,n1]=m1.split(':').map(Number), [h2,n2]=m2.split(':').map(Number);
+  let d=(h2*60+n2-(h1*60+n1))/60;
+  if(d<0) d+=24; // lintas tengah malam
+  d=Math.round(d*2)/2;
+  formRows[i].jamMulai=m1; formRows[i].jamSelesai=m2; formRows[i].durasi=d;
+  $('#du'+i).value=d; $('#no'+i).value=rp(calcNominal(d));
+  updateSummary();
+}
+function updateSummary(){
+  const rows=formRows.filter(Boolean);
+  const jam=rows.reduce((s,r)=>s+(r.durasi||0),0);
+  const nom=rows.reduce((s,r)=>s+calcNominal(r.durasi||0),0);
+  $('#sumKar').textContent=rows.length;
+  $('#sumJam').textContent=Math.round(jam*10)/10;
+  $('#sumNom').textContent=rp(nom);
+}
+async function submitOT(){
+  const rows=formRows.filter(Boolean);
+  if(!$('#fAlasan').value.trim()) return toast('Alasan lembur wajib diisi','warn');
+  if(!rows.length) return toast('Minimal 1 karyawan','warn');
+  for(const r of rows){ if(!r.id) return toast('Pilih karyawan dari daftar autocomplete: "'+(r.nama||'(kosong)')+'"','warn'); if(!r.durasi||r.durasi<=0) return toast('Durasi tidak valid untuk '+r.nama,'warn'); }
+  // Jenis lembur: LAIN-LAIN wajib isi detail → dikirim sbg "LAIN-LAIN (DETAIL)"
+  let jenis=$('#fJenis').value;
+  if(jenis.toUpperCase().startsWith('LAIN')){
+    const det=$('#fJenisDetail').value.trim();
+    if(!det) return toast('Detail jenis lembur "Lain-lain" wajib diisi','warn');
+    jenis='LAIN-LAIN ('+det.toUpperCase()+')';
+  }
+  const btn=$('#btnSubmit'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Mengirim...';
+  try{
+    const r = await rpc('apiSubmitOT', {
+      tanggalLembur:$('#fTgl').value, subDivisi:$('#fSub').value, jenisLembur:jenis,
+      lokasiLembur:$('#fLok').value, alasan:$('#fAlasan').value.trim(),
+      rows: rows.map(x=>({nama:x.nama,id:x.id,jabatan:x.jabatan,jamMulai:x.jamMulai,jamSelesai:x.jamSelesai,durasi:x.durasi}))
+    });
+    openModal(`<button class="x" onclick="closeModal()">✕</button>
+      <div style="text-align:center;padding:14px 6px">
+        <div style="font-size:52px;animation:popIn .5s both">🎉</div>
+        <h3 style="margin:8px 0 4px">Pengajuan Berhasil!</h3>
+        <p style="color:var(--ink-2)">Nomor dokumen Anda:</p>
+        <div style="font-size:17px;font-weight:800;color:var(--pri);background:var(--pri-l);border-radius:11px;padding:11px;margin:12px 0">${esc(r.idDok)}</div>
+        <p style="font-size:13px;color:var(--ink-2)">${rows.length} karyawan · ${r.totalDurasi} jam · <b>${esc(r.totalNominal)}</b><br>Status: <span class="badge b-PENDING">PENDING</span> — menunggu approval manager.</p>
+        <button class="btn btn-pri" style="margin-top:14px" onclick="closeModal();navigate('OT History')">Lihat OT History</button>
+      </div>`);
+    pageFormOT();
+  }catch(e){ toast(e.message,'err'); }
+  finally{ btn.disabled=false; btn.innerHTML='🚀 Ajukan Lembur'; }
+}
+
+/* ---------------------- PAGE: OT HISTORY ------------------------ */
+let histPage=1;
+function pageHistory(){
+  histPage=1;
+  $('#content').innerHTML = `
+  <div class="card anim">
+    <div class="toolbar">
+      <input id="hQ" placeholder="🔍 Cari dokumen / peminta..." style="flex:1;min-width:170px" oninput="debounceHist()">
+      <select id="hStatus" onchange="loadHistory(1)">
+        <option value="">Semua Status</option><option>PENDING</option><option>APPROVED</option><option>REVISI</option><option>REJECTED</option><option>CANCELLED</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="loadHistory(histPage)">⟳ Refresh</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>No. Dokumen</th><th>Tanggal</th><th>Peminta</th><th>Sub Divisi</th><th>Jenis</th><th style="text-align:center">Kar.</th><th style="text-align:center">Jam</th><th>Nominal</th><th>Status</th><th></th></tr></thead>
+      <tbody id="hBody">${skeletonRows(5,10)}</tbody>
+    </table></div>
+    <div class="pager" id="hPager"></div>
+  </div>`;
+  loadHistory(1);
+}
+let histTimer;
+function debounceHist(){ clearTimeout(histTimer); histTimer=setTimeout(()=>loadHistory(1),350); }
+async function loadHistory(p){
+  histPage=p;
+  $('#hBody').innerHTML=skeletonRows(5,10);
+  try{
+    const r=await rpc('apiHistory',{q:$('#hQ').value.trim(),status:$('#hStatus').value,page:p});
+    if(!r.rows.length){ $('#hBody').innerHTML='<tr><td colspan="10"><div class="empty"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><br>Tidak ada data ditemukan</div></td></tr>'; $('#hPager').innerHTML=''; return; }
+    $('#hBody').innerHTML=r.rows.map(h=>`<tr style="animation:fadeUp .3s both">
+      <td><b style="color:var(--pri)">${esc(h.idDok)}</b></td><td>${esc(h.tanggal)}</td><td>${esc(h.peminta)}</td>
+      <td>${esc(h.subDivisi)}</td><td>${esc(h.jenis)}</td><td style="text-align:center">${h.totalKaryawan}</td>
+      <td style="text-align:center"><b>${h.totalDurasi}</b></td><td>${esc(h.totalNominal)}</td>
+      <td><span class="badge b-${esc(h.status)}">${esc(h.status)}</span></td>
+      <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="showDetail('${esc(h.idDok)}','${esc(h.status)}')">Detail</button></td></tr>`).join('');
+    $('#hPager').innerHTML = `<span>${r.total} dokumen</span>
+      <button ${r.page<=1?'disabled':''} onclick="loadHistory(${r.page-1})">‹</button>
+      <span>Hal ${r.page}/${r.pages}</span>
+      <button ${r.page>=r.pages?'disabled':''} onclick="loadHistory(${r.page+1})">›</button>`;
+  }catch(e){ toast(e.message,'err'); }
+}
+async function showDetail(idDok, status){
+  openModal('<button class="x" onclick="closeModal()">✕</button><h3>📄 '+esc(idDok)+'</h3><div class="skeleton" style="height:120px;border-radius:12px;margin-top:14px"></div>', true);
+  try{
+    const r=await rpc('apiDocDetail', idDok);
+    const d0=r.details[0]||{};
+    openModal(`<button class="x" onclick="closeModal()">✕</button>
+      <h3>📄 ${esc(idDok)} <span class="badge b-${esc(status)}" style="vertical-align:middle">${esc(status)}</span></h3>
+      <p style="color:var(--ink-3);font-size:12.5px;margin-bottom:14px">Tgl lembur: <b>${esc(d0.tanggalLembur||'-')}</b> · Lokasi: <b>${esc(d0.lokasi||'-')}</b></p>
+      <div style="background:var(--pri-l);border-radius:11px;padding:11px 14px;font-size:13px;margin-bottom:14px"><b>Alasan:</b> ${esc(d0.alasan||'-')}</div>
+      ${d0.catatan?'<div style="background:var(--warn-l);border-radius:11px;padding:11px 14px;font-size:13px;margin-bottom:14px"><b>Catatan Manager:</b> '+esc(d0.catatan)+'</div>':''}
+      <div class="tbl-wrap"><table style="min-width:520px"><thead><tr><th>Karyawan</th><th>Jabatan</th><th>Jam</th><th style="text-align:center">Durasi</th><th>Nominal</th></tr></thead>
+      <tbody>${r.details.map(d=>'<tr><td><b>'+esc(d.nama)+'</b><br><small style="color:var(--ink-3)">'+esc(d.id)+'</small></td><td>'+esc(d.jabatan)+'</td><td>'+esc(d.jamMulai)+'–'+esc(d.jamSelesai)+'</td><td style="text-align:center"><b>'+d.durasi+'</b></td><td>'+esc(d.nominal)+'</td></tr>').join('')}</tbody></table></div>
+      <div style="display:flex;gap:9px;margin-top:18px;flex-wrap:wrap" class="no-print">
+        <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Cetak SPL</button>
+        ${status==='PENDING'?'<button class="btn btn-err btn-sm" onclick="cancelDoc(\''+esc(idDok)+'\')">✕ Batalkan Pengajuan</button>':''}
+        <button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="closeModal()">Tutup</button>
+      </div>`, true);
+  }catch(e){ toast(e.message,'err'); closeModal(); }
+}
+async function cancelDoc(idDok){
+  if(!confirm('Batalkan dokumen '+idDok+'?')) return;
+  try{ await rpc('apiCancel', idDok); toast('Dokumen dibatalkan','warn'); closeModal(); loadHistory(histPage); }
+  catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------------------- PAGE: APPROVAL -------------------------- */
+async function pageApproval(){
+  $('#content').innerHTML = `<div class="anim">
+    <div class="sec-title" style="margin-bottom:16px">✅ Antrian Approval <span class="badge b-PENDING" id="apCount" style="margin-left:4px">…</span></div>
+    <div class="ap-grid" id="apGrid">${'<div class="ap-card"><div class="skeleton" style="width:70%;height:15px;margin-bottom:12px"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:60%;margin-top:8px"></div><div class="skeleton" style="width:80%;margin-top:8px"></div></div>'.repeat(3)}</div></div>`;
+  try{
+    const r=await rpc('apiApprovalQueue');
+    $('#apCount').textContent = r.rows.length + ' PENDING';
+    if(!r.rows.length){ $('#apGrid').innerHTML='<div class="card empty" style="grid-column:1/-1">🎉 Tidak ada dokumen menunggu approval</div>'; return; }
+    $('#apGrid').innerHTML=r.rows.map((h,i)=>`
+      <div class="ap-card" style="animation-delay:${i*.06}s" onclick="approvalDetail('${esc(h.idDok)}')">
+        <span class="badge b-PENDING pend">PENDING</span>
+        <div class="id">📄 ${esc(h.idDok)}</div>
+        <div class="meta">
+          <span class="k">Tanggal</span><span class="v">${esc(h.tanggal)}</span>
+          <span class="k">Peminta</span><span class="v">${esc(h.peminta)}</span>
+          <span class="k">Sub Divisi</span><span class="v">${esc(h.subDivisi)}</span>
+          <span class="k">Jenis</span><span class="v">${esc(h.jenis)}</span>
+        </div>
+        <div class="foot">👥 ${h.totalKaryawan} kar. · ⏱ ${h.totalDurasi} jam<span class="nominal">${esc(h.totalNominal)}</span></div>
+      </div>`).join('');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* Klik card → modal detail karyawan + tombol Approve / Revisi / Reject */
+async function approvalDetail(idDok){
+  openModal('<button class="x" onclick="closeModal()">✕</button><h3>📄 '+esc(idDok)+'</h3><div class="skeleton" style="height:130px;border-radius:12px;margin-top:14px"></div>', true);
+  try{
+    const r=await rpc('apiDocDetail', idDok);
+    const d0=r.details[0]||{};
+    const totNom=r.details.reduce((s,d)=>s+(parseFloat(String(d.nominal).replace(/[^\d.-]/g,''))||0),0);
+    const totDur=r.details.reduce((s,d)=>s+(d.durasi||0),0);
+    openModal(`<button class="x" onclick="closeModal()">✕</button>
+      <h3>📄 ${esc(idDok)} <span class="badge b-PENDING" style="vertical-align:middle">PENDING</span></h3>
+      <p style="color:var(--ink-3);font-size:12.5px;margin-bottom:12px">Tgl lembur: <b>${esc(d0.tanggalLembur||'-')}</b> · Lokasi: <b>${esc(d0.lokasi||'-')}</b></p>
+      <div style="background:var(--pri-l);border-radius:11px;padding:11px 14px;font-size:13px;margin-bottom:14px"><b>Alasan:</b> ${esc(d0.alasan||'-')}</div>
+      <div class="tbl-wrap"><table style="min-width:430px">
+        <thead><tr><th>Nama Karyawan</th><th style="text-align:center">Durasi</th><th>Nominal</th></tr></thead>
+        <tbody>${r.details.map(d=>'<tr><td><b>'+esc(d.nama)+'</b><br><small style="color:var(--ink-3)">'+esc(d.id)+' · '+esc(d.jabatan)+' · '+esc(d.jamMulai)+'–'+esc(d.jamSelesai)+'</small></td><td style="text-align:center"><b>'+d.durasi+' jam</b></td><td><b>'+esc(d.nominal)+'</b></td></tr>').join('')}
+        <tr style="background:var(--pri-l);font-weight:800"><td>TOTAL — ${r.details.length} karyawan</td><td style="text-align:center">${Math.round(totDur*10)/10} jam</td><td>${rp(totNom)}</td></tr></tbody></table></div>
+      <div style="display:flex;gap:9px;margin-top:18px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-err" onclick="actionDlg('${esc(idDok)}','REJECT')">✕ Reject</button>
+        <button class="btn btn-sm" style="background:var(--info);color:#fff;padding:11px 20px;font-size:14px" onclick="actionDlg('${esc(idDok)}','REVISI')">✎ Revisi</button>
+        <button class="btn btn-ok" onclick="approveDoc('${esc(idDok)}')">✓ Approve</button>
+      </div>`, true);
+  }catch(e){ toast(e.message,'err'); closeModal(); }
+}
+async function approveDoc(idDok){
+  try{ await rpc('apiApprove', idDok, ''); toast('Dokumen '+idDok+' di-APPROVE ✅'); closeModal(); pageApproval(); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* Dialog catatan utk REJECT / REVISI (catatan wajib) */
+function actionDlg(idDok, mode){
+  const cfg = mode==='REJECT'
+    ? {icon:'⛔', title:'Tolak Dokumen', ph:'Alasan penolakan...', btn:'Tolak Dokumen', cls:'btn-err'}
+    : {icon:'✎', title:'Minta Revisi', ph:'Apa yang perlu diperbaiki pengaju...', btn:'Kirim Permintaan Revisi', cls:''};
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${cfg.icon} ${cfg.title}</h3>
+    <p style="color:var(--ink-2);font-size:13px;margin:4px 0 14px">${esc(idDok)}</p>
+    <div class="fld"><label>Catatan Manager (wajib)</label><textarea id="acNote" rows="3" style="width:100%;padding:11px;border:1.5px solid var(--line);border-radius:11px;outline:none" placeholder="${cfg.ph}"></textarea></div>
+    <div style="display:flex;gap:9px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="approvalDetail('${esc(idDok)}')">‹ Kembali</button>
+      <button class="btn ${cfg.cls}" ${mode==='REVISI'?'style="background:var(--info);color:#fff"':''} onclick="doAction('${esc(idDok)}','${mode}')">${cfg.btn}</button></div>`);
+}
+async function doAction(idDok, mode){
+  const note=$('#acNote').value.trim();
+  if(!note) return toast('Catatan wajib diisi','warn');
+  try{
+    if(mode==='REJECT'){ await rpc('apiReject', idDok, note); toast('Dokumen ditolak','warn'); }
+    else { await rpc('apiRevisi', idDok, note); toast('Permintaan revisi terkirim ke pengaju ✎'); }
+    closeModal(); pageApproval();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------------------- PAGE: AUDIT LOG ------------------------- */
+async function pageAudit(p){
+  p=p||1;
+  $('#content').innerHTML = `<div class="card anim"><div class="sec-title">🗒 Audit Log</div><div class="tl" id="alBody">${'<div class="tl-item"><div class="skeleton" style="width:30%"></div><div class="skeleton" style="width:70%;margin-top:6px"></div></div>'.repeat(5)}</div><div class="pager" id="alPager"></div></div>`;
+  try{
+    const r=await rpc('apiAuditLog', p);
+    const colors={LOGIN:'var(--info)',LOGOUT:'var(--ink-3)',SUBMIT_OT:'var(--pri)',APPROVE:'var(--ok)',REJECT:'var(--err)',REVISI:'var(--info)',CANCEL:'var(--warn)'};
+    $('#alBody').innerHTML = r.rows.length? r.rows.map((a,i)=>`<div class="tl-item" style="animation:fadeUp .3s ${i*.04}s both">
+        <div class="ts">${esc(a.ts)} — <b>${esc(a.user)}</b></div>
+        <div class="ac" style="color:${colors[a.action]||'var(--ink)'}">${esc(a.action)}</div>
+        <div class="dt">${esc(a.details)}</div></div>`).join('') : '<div class="empty">Belum ada aktivitas</div>';
+    $('#alPager').innerHTML = r.pages>1? `<button ${r.page<=1?'disabled':''} onclick="pageAudit(${r.page-1})">‹</button><span>Hal ${r.page}/${r.pages}</span><button ${r.page>=r.pages?'disabled':''} onclick="pageAudit(${r.page+1})">›</button>` : '';
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ---------------------- PAGE: REPORT ---------------------------- */
+let repRows=[];
+async function pageReport(group){
+  group=group||'subdivisi';
+  $('#content').innerHTML = `<div class="card anim">
+    <div class="toolbar">
+      <div class="sec-title" style="margin:0">📊 Rekapitulasi Lembur</div>
+      <select id="rpGroup" onchange="pageReport(this.value)" style="margin-left:auto">
+        <option value="subdivisi" ${group==='subdivisi'?'selected':''}>Per Sub Divisi</option>
+        <option value="jenis" ${group==='jenis'?'selected':''}>Per Jenis Lembur</option>
+        <option value="bulan" ${group==='bulan'?'selected':''}>Per Bulan</option>
+        <option value="status" ${group==='status'?'selected':''}>Per Status</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Kelompok</th><th style="text-align:center">Dokumen</th><th style="text-align:center">Karyawan</th><th style="text-align:center">Total Jam</th><th>Total Nominal</th></tr></thead>
+      <tbody id="rpBody">${skeletonRows(4,5)}</tbody></table></div></div>`;
+  try{
+    const r=await rpc('apiReport', group);
+    repRows=r.rows;
+    const tot=r.rows.reduce((s,x)=>({dok:s.dok+x.dok,karyawan:s.karyawan+x.karyawan,durasi:s.durasi+x.durasi,nominal:s.nominal+x.nominal}),{dok:0,karyawan:0,durasi:0,nominal:0});
+    $('#rpBody').innerHTML = r.rows.map((x,i)=>`<tr style="animation:fadeUp .3s ${i*.05}s both"><td><b>${esc(x.key)}</b></td><td style="text-align:center">${x.dok}</td><td style="text-align:center">${x.karyawan}</td><td style="text-align:center">${Math.round(x.durasi*10)/10}</td><td><b>${rp(x.nominal)}</b></td></tr>`).join('')
+      + `<tr style="background:var(--pri-l);font-weight:800"><td>GRAND TOTAL</td><td style="text-align:center">${tot.dok}</td><td style="text-align:center">${tot.karyawan}</td><td style="text-align:center">${Math.round(tot.durasi*10)/10}</td><td>${rp(tot.nominal)}</td></tr>`;
+  }catch(e){ toast(e.message,'err'); }
+}
+function exportCSV(){
+  const head='Kelompok,Dokumen,Karyawan,TotalJam,TotalNominal\n';
+  const csv=head+repRows.map(x=>[x.key,x.dok,x.karyawan,x.durasi,x.nominal].join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='report_overtime_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('CSV berhasil diunduh');
+}
+
+/* ---------------------- PAGE: SETTINGS -------------------------- */
+async function pageSettings(){
+  const r0=STATE.boot.rates;
+  $('#content').innerHTML = `
+  <div class="grid g-2">
+    <div class="card anim"><div class="sec-title">💰 Rate Lembur</div>
+      <div class="fld"><label>Rate Jam Pertama (Rp)</label><input type="number" id="rFirst" value="${r0.firstHour}"></div>
+      <div class="fld"><label>Rate Jam Berikutnya (Rp/jam)</label><input type="number" id="rNext" value="${r0.nextHour}"></div>
+      <button class="btn btn-pri btn-sm" onclick="saveRates()">💾 Simpan Rate</button>
+    </div>
+    <div class="card anim anim-d1"><div class="sec-title">ℹ️ Info Sistem</div>
+      <div style="font-size:13px;line-height:2.1;color:var(--ink-2)">
+        Mode: <b>${IS_GAS?'LIVE (Google Apps Script)':(IS_REMOTE?'REMOTE (Hosting Eksternal + API)':'DEMO (Preview)')}</b><br>
+        Database: <b>Google Spreadsheet (9 sheet)</b><br>
+        Storage: <b>Google Drive /OT_ATTACHMENTS</b><br>
+        Versi: <b>1.0.0</b></div>
+    </div>
+  </div>
+  <div class="card anim anim-d2" style="margin-top:18px">
+    <div class="toolbar"><div class="sec-title" style="margin:0">👤 Manajemen User</div>
+      <button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="userDlg()">＋ Tambah User</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Username</th><th>Nama Lengkap</th><th>Role</th><th>Akses Menu</th><th></th></tr></thead>
+    <tbody id="usBody">${skeletonRows(3,5)}</tbody></table></div>
+  </div>`;
+  loadUsers();
+}
+async function loadUsers(){
+  try{
+    const r=await rpc('apiUsers');
+    window._users=r.rows;
+    $('#usBody').innerHTML=r.rows.map((u,i)=>`<tr style="animation:fadeUp .3s ${i*.04}s both">
+      <td><b>${esc(u.username)}</b></td><td>${esc(u.fullName)}</td>
+      <td><span class="badge" style="background:${u.role==='ADMIN'?'var(--err-l);color:var(--err)':u.role==='MANAGER'?'var(--info-l);color:var(--info)':'var(--ok-l);color:var(--ok)'}">${esc(u.role)}</span></td>
+      <td style="font-size:11.5px;color:var(--ink-2);max-width:280px">${esc(u.aksesMenu)}</td>
+      <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="userDlg(${i})">✎</button>
+      <button class="btn btn-err btn-sm" onclick="delUser('${esc(u.username)}')">🗑</button></td></tr>`).join('');
+  }catch(e){ toast(e.message,'err'); }
+}
+function userDlg(i){
+  const u = i!==undefined? window._users[i] : null;
+  const allMenus=['Dashboard','Form OT','OT History','Approval','Audit Log','Report','Settings'];
+  const cur = u? u.aksesMenu.split(',').map(s=>s.trim()) : ['Dashboard','Form OT','OT History'];
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${u?'✎ Edit':'＋ Tambah'} User</h3><div style="height:12px"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>Username</label><input id="uUn" value="${u?esc(u.username):''}" ${u?'readonly style="background:#f8fafc"':''}></div>
+      <div class="fld"><label>Password ${u?'(kosongkan = tetap)':''}</label><input id="uPw" type="text" placeholder="${u?'••••••':''}"></div>
+    </div>
+    <div class="fld"><label>Nama Lengkap</label><input id="uFn" value="${u?esc(u.fullName):''}"></div>
+    <div class="fld"><label>Role</label><select id="uRl"><option ${u&&u.role==='USER'?'selected':''}>USER</option><option ${u&&u.role==='MANAGER'?'selected':''}>MANAGER</option><option ${u&&u.role==='ADMIN'?'selected':''}>ADMIN</option></select></div>
+    <div class="fld"><label>Akses Menu</label><div style="display:flex;flex-wrap:wrap;gap:8px">${allMenus.map(m=>'<label style="display:flex;gap:6px;align-items:center;border:1.5px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer"><input type="checkbox" class="uMenu" value="'+m+'" '+(cur.includes(m)?'checked':'')+'>'+m+'</label>').join('')}</div></div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px"><button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+    <button class="btn btn-pri" onclick="saveUser(${u?'false':'true'})">💾 Simpan</button></div>`);
+}
+async function saveUser(isNew){
+  const menus=[...document.querySelectorAll('.uMenu:checked')].map(c=>c.value).join(', ');
+  const data={username:$('#uUn').value.trim(),password:$('#uPw').value.trim(),fullName:$('#uFn').value.trim(),role:$('#uRl').value,aksesMenu:menus};
+  if(!data.username||!data.fullName) return toast('Username & nama wajib diisi','warn');
+  if(isNew&&!data.password) return toast('Password wajib untuk user baru','warn');
+  try{ await rpc('apiSaveUser', data, isNew); toast('User tersimpan ✅'); closeModal(); loadUsers(); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function delUser(un){
+  if(!confirm('Hapus user '+un+'?')) return;
+  try{ await rpc('apiDeleteUser', un); toast('User dihapus','warn'); loadUsers(); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* ------------- PAGE: SETTINGS › DATA KARYAWAN -------------------
+   CRUD + SOFT DELETE: tombol "Resign" hanya mengubah Status menjadi
+   RESIGN (baris tetap di sheet), bisa di-Reaktivasi kapan saja. */
+let karPage=1, karTimer;
+function pageKaryawan(){
+  karPage=1;
+  $('#content').innerHTML = `
+  <div class="card anim">
+    <div class="toolbar">
+      <div class="sec-title" style="margin:0">🧑‍💼 Data Karyawan</div>
+      <input id="kQ" placeholder="🔍 Cari NIK / ID / nama / jabatan..." style="flex:1;min-width:170px" oninput="clearTimeout(karTimer);karTimer=setTimeout(()=>loadKaryawan(1),350)">
+      <select id="kStatus" onchange="loadKaryawan(1)">
+        <option value="">Semua Status</option><option>AKTIF</option><option>RESIGN</option>
+      </select>
+      <button class="btn btn-pri btn-sm" onclick="karDlg()">＋ Tambah Karyawan</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>NIK</th><th>ID</th><th>Nama Karyawan</th><th>Divisi</th><th>Sub Divisi</th><th>Jabatan</th><th>Status</th><th style="min-width:130px"></th></tr></thead>
+      <tbody id="kBody">${skeletonRows(5,8)}</tbody></table></div>
+    <div class="pager" id="kPager"></div>
+    <p style="font-size:11.5px;color:var(--ink-3);margin-top:10px">🗑 <b>Soft delete:</b> tombol "Resign" hanya mengubah status — data tidak pernah terhapus dari sheet & bisa di-reaktivasi. Karyawan RESIGN otomatis hilang dari autocomplete Form OT.</p>
+  </div>`;
+  loadKaryawan(1);
+}
+async function loadKaryawan(p){
+  karPage=p;
+  $('#kBody').innerHTML=skeletonRows(5,8);
+  try{
+    const r=await rpc('apiKaryawanList',{q:$('#kQ').value.trim(),status:$('#kStatus').value,page:p});
+    window._kar=r.rows;
+    if(!r.rows.length){ $('#kBody').innerHTML='<tr><td colspan="8"><div class="empty">Tidak ada data karyawan</div></td></tr>'; $('#kPager').innerHTML=''; return; }
+    $('#kBody').innerHTML=r.rows.map((k,i)=>{
+      const aktif=k.status==='AKTIF';
+      return `<tr style="animation:fadeUp .3s ${i*.04}s both;${aktif?'':'opacity:.55'}">
+      <td>${esc(k.nik)}</td><td><b>${esc(k.id)}</b></td><td><b>${esc(k.nama)}</b></td>
+      <td style="font-size:12px">${esc(k.divisi)}</td><td>${esc(k.subDivisi)}</td><td>${esc(k.jabatan)}</td>
+      <td><span class="badge" style="background:${aktif?'var(--ok-l);color:var(--ok)':'var(--err-l);color:var(--err)'}">${esc(k.status)}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="karDlg(${i})" title="Edit">✎</button>
+        ${aktif
+          ?'<button class="btn btn-err btn-sm" onclick="toggleKar(\''+esc(k.id)+'\',\''+esc(k.nama)+'\',\'RESIGN\')" title="Soft delete">🗑 Resign</button>'
+          :'<button class="btn btn-ok btn-sm" onclick="toggleKar(\''+esc(k.id)+'\',\''+esc(k.nama)+'\',\'AKTIF\')" title="Aktifkan kembali">↺ Reaktivasi</button>'}
+      </td></tr>`;}).join('');
+    $('#kPager').innerHTML = `<span>${r.total} karyawan</span>
+      <button ${r.page<=1?'disabled':''} onclick="loadKaryawan(${r.page-1})">‹</button>
+      <span>Hal ${r.page}/${r.pages}</span>
+      <button ${r.page>=r.pages?'disabled':''} onclick="loadKaryawan(${r.page+1})">›</button>`;
+  }catch(e){ toast(e.message,'err'); }
+}
+function karDlg(i){
+  const k = i!==undefined? window._kar[i] : null;
+  const divs=[...new Set(STATE.boot.divisi.map(d=>d.divisi))];
+  const subs=[...new Set(STATE.boot.divisi.map(d=>d.subDivisi))];
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${k?'✎ Edit':'＋ Tambah'} Karyawan</h3><div style="height:12px"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>NIK</label><input id="kNik" value="${k?esc(k.nik):''}" placeholder="mis. 1019900014"></div>
+      <div class="fld"><label>Id Karyawan *</label><input id="kId" value="${k?esc(k.id):''}" ${k?'readonly style="background:#f8fafc"':''} placeholder="mis. 900014"></div>
+    </div>
+    <div class="fld"><label>Nama Karyawan *</label><input id="kNama" value="${k?esc(k.nama):''}" placeholder="NAMA LENGKAP"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>Divisi</label><select id="kDiv">${divs.map(d=>'<option '+(k&&k.divisi===d?'selected':'')+'>'+esc(d)+'</option>').join('')}</select></div>
+      <div class="fld"><label>Sub Divisi</label><select id="kSub">${subs.map(s=>'<option '+(k&&k.subDivisi===s?'selected':'')+'>'+esc(s)+'</option>').join('')}</select></div>
+    </div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>Jabatan</label><input id="kJab" value="${k?esc(k.jabatan):''}" placeholder="mis. STAF HELPER"></div>
+      <div class="fld"><label>Status</label><select id="kSt"><option ${k&&k.status==='AKTIF'?'selected':''}>AKTIF</option><option ${k&&k.status==='RESIGN'?'selected':''}>RESIGN</option></select></div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-pri" onclick="saveKar(${k?'false':'true'})">💾 Simpan</button></div>`);
+}
+async function saveKar(isNew){
+  const data={nik:$('#kNik').value.trim(),id:$('#kId').value.trim(),nama:$('#kNama').value.trim(),
+    divisi:$('#kDiv').value,subDivisi:$('#kSub').value,jabatan:$('#kJab').value.trim(),status:$('#kSt').value};
+  if(!data.id||!data.nama) return toast('Id Karyawan & Nama wajib diisi','warn');
+  try{
+    await rpc('apiSaveKaryawan', data, isNew);
+    toast('Karyawan tersimpan ✅'); closeModal(); loadKaryawan(karPage);
+    refreshBootKaryawan();
+  }catch(e){ toast(e.message,'err'); }
+}
+async function toggleKar(id, nama, target){
+  const msg = target==='RESIGN'
+    ? 'Set status RESIGN untuk '+nama+'?\n(Soft delete — data tetap tersimpan & bisa direaktivasi)'
+    : 'Aktifkan kembali '+nama+'?';
+  if(!confirm(msg)) return;
+  try{
+    const r=await rpc('apiToggleKaryawan', id);
+    toast(nama+' → '+r.status, r.status==='AKTIF'?'ok':'warn');
+    loadKaryawan(karPage);
+    refreshBootKaryawan();
+  }catch(e){ toast(e.message,'err'); }
+}
+/* ------------- PAGE: SETTINGS › MASTER DATA ---------------------
+   Menarik & menampilkan data sheet MENU_SETTINGS, APPROVAL_ROLE,
+   DIVISI_ROLE (hasil sinkronisasi) dengan CRUD lengkap. */
+let masterTab='menu', _master=null;
+async function pageMaster(tab){
+  masterTab=tab||masterTab||'menu';
+  $('#content').innerHTML = `<div class="card anim">
+    <div class="tabs">
+      <button class="tab ${masterTab==='menu'?'active':''}" onclick="pageMaster('menu')">📑 Menu Settings</button>
+      <button class="tab ${masterTab==='approval'?'active':''}" onclick="pageMaster('approval')">✅ Approval Role</button>
+      <button class="tab ${masterTab==='divisi'?'active':''}" onclick="pageMaster('divisi')">🏢 Divisi Role</button>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto;align-self:center" onclick="_master=null;pageMaster(masterTab)">⟳ Refresh</button>
+    </div>
+    <div id="masterBody"><div class="skeleton" style="height:160px;border-radius:12px"></div></div>
+  </div>`;
+  try{
+    if(!_master) _master=await rpc('apiMasterData');
+    ({menu:renderMasterMenu,approval:renderMasterApproval,divisi:renderMasterDivisi})[masterTab]();
+  }catch(e){ toast(e.message,'err'); $('#masterBody').innerHTML='<div class="empty">Gagal menarik data — cek sinkronisasi sheet</div>'; }
+}
+/* ---- TAB: MENU_SETTINGS ---- */
+function renderMasterMenu(){
+  const rows=_master.menus;
+  $('#masterBody').innerHTML=`
+    <div class="toolbar"><span style="font-size:12.5px;color:var(--ink-3)">${rows.length} menu dari sheet <b>MENU_SETTINGS</b> — soft delete via IsActive</span>
+      <button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="menuDlg()">＋ Tambah Menu</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>IdMenu</th><th>MenuName</th><th>IdParent</th><th>RoutePath</th><th style="text-align:center">Order</th><th style="text-align:center">IsActive</th><th style="min-width:120px"></th></tr></thead>
+      <tbody>${rows.length?rows.map((m,i)=>`<tr style="animation:fadeUp .3s ${i*.03}s both;${m.isActive?'':'opacity:.5'}">
+        <td><b>${esc(m.idMenu)}</b></td><td><b>${esc(m.menuName)}</b>${m.idParent?' <small style="color:var(--ink-3)">↳ submenu</small>':''}</td>
+        <td>${esc(m.idParent||'—')}</td><td style="font-size:12px;color:var(--ink-2)">${esc(m.routePath)}</td>
+        <td style="text-align:center">${m.orderIndex}</td>
+        <td style="text-align:center"><span class="badge" style="background:${m.isActive?'var(--ok-l);color:var(--ok)':'var(--err-l);color:var(--err)'}">${m.isActive?'TRUE':'FALSE'}</span></td>
+        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="menuDlg(${i})">✎</button>
+        <button class="btn ${m.isActive?'btn-err':'btn-ok'} btn-sm" onclick="toggleMenu('${esc(m.idMenu)}')">${m.isActive?'🗑 Off':'↺ On'}</button></td></tr>`).join('')
+      :'<tr><td colspan="7"><div class="empty">Sheet MENU_SETTINGS kosong / belum tertarik — cek Sinkronisasi</div></td></tr>'}</tbody></table></div>`;
+}
+function menuDlg(i){
+  const m=i!==undefined?_master.menus[i]:null;
+  const parents=_master.menus.filter(x=>!x.idParent);
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${m?'✎ Edit':'＋ Tambah'} Menu</h3><div style="height:12px"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>IdMenu *</label><input id="mnId" value="${m?esc(m.idMenu):''}" ${m?'readonly style="background:#f8fafc"':''} placeholder="mis. M8"></div>
+      <div class="fld"><label>MenuName *</label><input id="mnName" value="${m?esc(m.menuName):''}"></div>
+    </div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>IdParent (submenu)</label><select id="mnParent"><option value="">— Menu Utama —</option>${parents.map(p=>'<option value="'+esc(p.idMenu)+'" '+(m&&m.idParent===p.idMenu?'selected':'')+'>'+esc(p.idMenu)+' · '+esc(p.menuName)+'</option>').join('')}</select></div>
+      <div class="fld"><label>OrderIndex</label><input type="number" id="mnOrder" value="${m?m.orderIndex:99}"></div>
+    </div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>RoutePath</label><input id="mnRoute" value="${m?esc(m.routePath):''}" placeholder="/contoh"></div>
+      <div class="fld"><label>IsActive</label><select id="mnActive"><option value="1" ${!m||m.isActive?'selected':''}>TRUE</option><option value="0" ${m&&!m.isActive?'selected':''}>FALSE</option></select></div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-pri" onclick="saveMenu(${m?'false':'true'})">💾 Simpan</button></div>`);
+}
+async function saveMenu(isNew){
+  const d={idMenu:$('#mnId').value.trim(),menuName:$('#mnName').value.trim(),idParent:$('#mnParent').value,
+    routePath:$('#mnRoute').value.trim(),orderIndex:+$('#mnOrder').value,isActive:$('#mnActive').value==='1'};
+  if(!d.idMenu||!d.menuName) return toast('IdMenu & MenuName wajib diisi','warn');
+  try{ await rpc('apiSaveMenu',d,isNew); toast('Menu tersimpan ✅'); closeModal(); _master=null; pageMaster('menu'); refreshBootNav(); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function toggleMenu(id){
+  try{ const r=await rpc('apiToggleMenu',id); toast('Menu '+id+' → '+(r.isActive?'AKTIF':'NONAKTIF'),r.isActive?'ok':'warn'); _master=null; pageMaster('menu'); refreshBootNav(); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* ---- TAB: APPROVAL_ROLE ---- */
+function renderMasterApproval(){
+  const rows=_master.approvals;
+  const karName=id=>{const k=(window._kar||[]).concat(STATE.boot.karyawan).find(x=>x.id===id);return k?k.nama:'';};
+  $('#masterBody').innerHTML=`
+    <div class="toolbar"><span style="font-size:12.5px;color:var(--ink-3)">${rows.length} matriks dari sheet <b>APPROVAL_ROLE</b></span>
+      <button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="apvDlg()">＋ Tambah Matrix</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>IdMatrix</th><th>IdDivisi</th><th style="text-align:center">ApprovalLevel</th><th>IdApproval (Manager)</th><th style="min-width:110px"></th></tr></thead>
+      <tbody>${rows.length?rows.map((a,i)=>`<tr style="animation:fadeUp .3s ${i*.03}s both">
+        <td><b>${esc(a.idMatrix)}</b></td><td><span class="badge" style="background:var(--pri-l);color:var(--pri-d)">${esc(a.idDivisi)}</span></td>
+        <td style="text-align:center">${a.approvalLevel}</td>
+        <td><b>${esc(a.idApproval)}</b>${karName(a.idApproval)?' <small style="color:var(--ink-3)">· '+esc(karName(a.idApproval))+'</small>':''}</td>
+        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="apvDlg(${i})">✎</button>
+        <button class="btn btn-err btn-sm" onclick="delApproval('${esc(a.idMatrix)}')">🗑</button></td></tr>`).join('')
+      :'<tr><td colspan="5"><div class="empty">Sheet APPROVAL_ROLE kosong / belum tertarik — cek Sinkronisasi</div></td></tr>'}</tbody></table></div>`;
+}
+function apvDlg(i){
+  const a=i!==undefined?_master.approvals[i]:null;
+  const divIds=[...new Set(_master.divisi.map(d=>d.idDivisi))];
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${a?'✎ Edit':'＋ Tambah'} Approval Matrix</h3><div style="height:12px"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>IdMatrix *</label><input id="apId" value="${a?esc(a.idMatrix):''}" ${a?'readonly style="background:#f8fafc"':''} placeholder="mis. M004"></div>
+      <div class="fld"><label>IdDivisi *</label><select id="apDiv">${divIds.map(d=>'<option '+(a&&a.idDivisi===d?'selected':'')+'>'+esc(d)+'</option>').join('')}</select></div>
+    </div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>ApprovalLevel</label><input type="number" id="apLvl" value="${a?a.approvalLevel:1}" min="1" max="5"></div>
+      <div class="fld"><label>IdApproval (IdKaryawan Manager) *</label><input id="apApr" value="${a?esc(a.idApproval):''}" placeholder="mis. 800002"></div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-pri" onclick="saveApproval(${a?'false':'true'})">💾 Simpan</button></div>`);
+}
+async function saveApproval(isNew){
+  const d={idMatrix:$('#apId').value.trim(),idDivisi:$('#apDiv').value,approvalLevel:+$('#apLvl').value,idApproval:$('#apApr').value.trim()};
+  if(!d.idMatrix||!d.idApproval) return toast('IdMatrix & IdApproval wajib diisi','warn');
+  try{ await rpc('apiSaveApproval',d,isNew); toast('Matrix tersimpan ✅'); closeModal(); _master=null; pageMaster('approval'); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function delApproval(id){
+  if(!confirm('Hapus matrix '+id+'?')) return;
+  try{ await rpc('apiDeleteApproval',id); toast('Matrix dihapus','warn'); _master=null; pageMaster('approval'); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* ---- TAB: DIVISI_ROLE ---- */
+function renderMasterDivisi(){
+  const rows=_master.divisi;
+  $('#masterBody').innerHTML=`
+    <div class="toolbar"><span style="font-size:12.5px;color:var(--ink-3)">${rows.length} baris dari sheet <b>DIVISI_ROLE</b></span>
+      <button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="divDlg()">＋ Tambah Sub Divisi</button></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>IdDivisi</th><th>Divisi</th><th>SubDivisi</th><th>IdSubdiv</th><th>IdManager</th><th style="min-width:110px"></th></tr></thead>
+      <tbody>${rows.length?rows.map((d,i)=>`<tr style="animation:fadeUp .3s ${i*.03}s both">
+        <td><span class="badge" style="background:var(--pri-l);color:var(--pri-d)">${esc(d.idDivisi)}</span></td>
+        <td>${esc(d.divisi)}</td><td><b>${esc(d.subDivisi)}</b></td><td>${esc(d.idSubdiv)}</td><td>${esc(d.idManager)}</td>
+        <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="divDlg(${i})">✎</button>
+        <button class="btn btn-err btn-sm" onclick="delDivisi('${esc(d.idDivisi)}','${esc(d.subDivisi)}')">🗑</button></td></tr>`).join('')
+      :'<tr><td colspan="6"><div class="empty">Sheet DIVISI_ROLE kosong / belum tertarik — cek Sinkronisasi</div></td></tr>'}</tbody></table></div>`;
+}
+function divDlg(i){
+  const d=i!==undefined?_master.divisi[i]:null;
+  openModal(`<button class="x" onclick="closeModal()">✕</button>
+    <h3>${d?'✎ Edit':'＋ Tambah'} Divisi / Sub Divisi</h3><div style="height:12px"></div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>IdDivisi *</label><input id="dvId" value="${d?esc(d.idDivisi):''}" placeholder="mis. DC / OPR / HO"></div>
+      <div class="fld"><label>Divisi</label><input id="dvNm" value="${d?esc(d.divisi):''}" placeholder="mis. DISTRIBUTION CENTER"></div>
+    </div>
+    <div class="grid g-2" style="gap:12px">
+      <div class="fld"><label>SubDivisi *</label><input id="dvSub" value="${d?esc(d.subDivisi):''}" placeholder="mis. GUDANG NAGOYA"></div>
+      <div class="fld"><label>IdSubdiv</label><input id="dvIds" value="${d?esc(d.idSubdiv):''}" placeholder="mis. GD NGY"></div>
+    </div>
+    <div class="fld"><label>IdManager</label><input id="dvMgr" value="${d?esc(d.idManager):''}" placeholder="IdKaryawan manager, mis. 800002"></div>
+    <input type="hidden" id="dvOrig" value="${d?esc(d.subDivisi):''}">
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-pri" onclick="saveDivisi(${d?'false':'true'})">💾 Simpan</button></div>`);
+}
+async function saveDivisi(isNew){
+  const d={idDivisi:$('#dvId').value.trim().toUpperCase(),divisi:$('#dvNm').value.trim().toUpperCase(),
+    subDivisi:$('#dvSub').value.trim().toUpperCase(),idSubdiv:$('#dvIds').value.trim(),idManager:$('#dvMgr').value.trim()};
+  if(!d.idDivisi||!d.subDivisi) return toast('IdDivisi & SubDivisi wajib diisi','warn');
+  try{ await rpc('apiSaveDivisi',d,isNew,$('#dvOrig').value); toast('Divisi tersimpan ✅'); closeModal(); _master=null; pageMaster('divisi'); refreshBootNav(); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function delDivisi(idD,sub){
+  if(!confirm('Hapus '+idD+' · '+sub+'?')) return;
+  try{ await rpc('apiDeleteDivisi',idD,sub); toast('Data divisi dihapus','warn'); _master=null; pageMaster('divisi'); refreshBootNav(); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* refresh bootstrap (menu sidebar + dropdown divisi) setelah edit master */
+async function refreshBootNav(){
+  if(IS_DEMO) return;
+  try{ const r=await rpc('apiBootstrap'); if(r.ok){ STATE.boot=r.bootstrap; renderNav(); } }catch(e){}
+}
+
+/* ------------- PAGE: SETTINGS › SINKRONISASI --------------------
+   Masukkan URL Spreadsheet (database) + Web App URL agar semua
+   sheet terkoneksi dengan aplikasi. Tersimpan di Script Properties
+   server — berlaku langsung tanpa redeploy. */
+async function pageSync(){
+  $('#content').innerHTML = `
+  ${IS_DEMO?'<div class="card anim" style="border-left:4px solid var(--warn);margin-bottom:18px;background:var(--warn-l)"><b style="color:#92400e">⚠ MODE DEMO/PREVIEW</b><p style="font-size:12.5px;color:#92400e;margin-top:4px">Halaman ini sedang menampilkan <b>data contoh bawaan</b>, bukan data spreadsheet Anda. Sinkronisasi & diagnosa yang sesungguhnya hanya berfungsi setelah aplikasi di-deploy sebagai Web App di Google Apps Script dan dibuka melalui URL <code>script.google.com/macros/s/.../exec</code>.</p></div>':''}
+  <div class="grid g-2">
+    <div class="card anim">
+      <div class="sec-title">🔗 Koneksi Aplikasi</div>
+      <div class="fld"><label>URL / ID Google Spreadsheet (Database)</label>
+        <input id="syUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
+        <p style="font-size:11px;color:var(--ink-3);margin-top:5px">Tempel URL lengkap atau ID-nya saja. Semua sheet (USER_ROLE, OT_HEADER, dst.) akan dibaca dari spreadsheet ini.</p></div>
+      <div class="fld"><label>Web App URL (hasil deploy Apps Script)</label>
+        <input id="syWeb" placeholder="https://script.google.com/macros/s/.../exec">
+        <p style="font-size:11px;color:var(--ink-3);margin-top:5px">Disimpan sebagai alamat resmi aplikasi — untuk dibagikan ke user.</p></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-pri btn-sm" id="syBtn" onclick="syncConnect()">🔌 Hubungkan & Sinkronkan</button>
+        <button class="btn btn-ghost btn-sm" onclick="syncTest()">🔄 Tes Koneksi / Refresh Cache</button>
+        <button class="btn btn-ghost btn-sm" onclick="syncDiagnose()">🩺 Diagnosa Data</button>
+        <button class="btn btn-ghost btn-sm" id="syReset" onclick="syncReset()" style="display:none">↩ Kembali ke Default</button>
+      </div>
+    </div>
+    <div class="card anim anim-d1">
+      <div class="sec-title">📡 Status Koneksi</div>
+      <div id="syStatus"><div class="skeleton" style="height:90px;border-radius:12px"></div></div>
+    </div>
+  </div>
+  <div class="card anim anim-d2" style="margin-top:18px">
+    <div class="sec-title">📋 Checklist Sheet Terkoneksi</div>
+    <div class="tbl-wrap"><table style="min-width:520px">
+      <thead><tr><th>Sheet</th><th>Fungsi</th><th style="text-align:center">Status</th><th style="text-align:center">Jumlah Baris</th></tr></thead>
+      <tbody id="syBody">${skeletonRows(5,4)}</tbody></table></div>
+  </div>`;
+  loadSyncInfo();
+}
+async function loadSyncInfo(){
+  try{
+    const r=await rpc('apiSyncInfo');
+    renderSyncInfo(r);
+  }catch(e){ toast(e.message,'err'); $('#syStatus').innerHTML='<div class="empty">Gagal memuat status</div>'; }
+}
+function renderSyncInfo(r){
+  // status panel
+  const okBadge='<span class="badge" style="background:var(--ok-l);color:var(--ok)">TERHUBUNG</span>';
+  const noBadge='<span class="badge" style="background:var(--err-l);color:var(--err)">TERPUTUS</span>';
+  $('#syStatus').innerHTML=`
+    <div style="font-size:13px;line-height:2.1">
+      Koneksi Database: ${r.connected?okBadge:noBadge}<br>
+      Sinkronisasi: ${r.synced
+        ?'<span class="badge" style="background:var(--ok-l);color:var(--ok)">✓ SEMUA SHEET SINKRON</span>'
+        :'<span class="badge b-PENDING">BELUM LENGKAP</span>'}<br>
+      ${r.demoActive?'<span style="color:var(--warn);font-weight:700;font-size:12px">🛟 User DEMO masih aktif (nonaktif otomatis setelah sinkron penuh)</span><br>':''}
+      <span style="color:var(--ink-3);font-size:11.5px">Spreadsheet:</span> <b>${esc(r.ssName||'-')}</b> ${r.isOverride?'<span class="badge" style="background:var(--info-l);color:var(--info)">CUSTOM</span>':'<span class="badge" style="background:#f1f5f9;color:var(--ink-3)">DEFAULT</span>'}<br>
+      <span style="color:var(--ink-3);font-size:11.5px;word-break:break-all">ID: ${esc(r.ssId)}</span><br>
+      ${r.webAppUrl?'<span style="color:var(--ink-3);font-size:11.5px">Web App:</span> <a href="'+esc(r.webAppUrl)+'" target="_blank" style="color:var(--pri);font-size:11.5px;word-break:break-all">'+esc(r.webAppUrl)+'</a> <button class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="copyText(\''+esc(r.webAppUrl)+'\')">📋 Salin</button>':'<span style="color:var(--ink-3);font-size:11.5px">Web App URL belum diatur</span>'}
+    </div>`;
+  // prefill input + tombol reset
+  if($('#syUrl')&&!$('#syUrl').value) $('#syUrl').placeholder=r.ssUrl||$('#syUrl').placeholder;
+  if($('#syWeb')&&!$('#syWeb').value&&r.webAppUrl) $('#syWeb').value=r.webAppUrl;
+  $('#syReset').style.display=r.isOverride?'inline-flex':'none';
+  // checklist
+  $('#syBody').innerHTML=(r.checklist||[]).map((c,i)=>`<tr style="animation:fadeUp .3s ${i*.04}s both">
+    <td><b>${esc(c.sheet)}</b>${c.optional?' <small style="color:var(--ink-3)">(opsional)</small>':''}</td>
+    <td style="font-size:12px;color:var(--ink-2)">${esc(c.desc)}</td>
+    <td style="text-align:center">${c.exists
+      ?'<span class="badge" style="background:var(--ok-l);color:var(--ok)">✓ ADA</span>'
+      :'<span class="badge" style="background:var(--err-l);color:var(--err)">✕ HILANG</span>'}</td>
+    <td style="text-align:center"><b>${c.exists?c.rows:'-'}</b></td></tr>`).join('')
+    ||'<tr><td colspan="4"><div class="empty">Spreadsheet tidak terjangkau</div></td></tr>';
+}
+async function syncConnect(){
+  const url=$('#syUrl').value.trim(), web=$('#syWeb').value.trim();
+  if(!url&&!web) return toast('Isi URL Spreadsheet dan/atau Web App URL','warn');
+  const btn=$('#syBtn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Menghubungkan...';
+  try{
+    const r=await rpc('apiSyncConnect', url, web);
+    _master=null; // paksa tarik ulang master data (menu/approval/divisi)
+    renderSyncInfo(r);
+    toast(r.synced?'Terhubung — semua sheet tersinkronisasi ✅':'Terhubung, namun ada sheet yang belum lengkap ⚠','ok');
+    if(r.synced&&!r.demoActive) refreshDemoHint();
+    // refresh master data di memori agar dropdown/autocomplete ikut data baru
+    if(!IS_DEMO){ try{ const b=await rpc('apiBootstrap'); if(b.ok){ STATE.boot=b.bootstrap; renderNav(); } }catch(e){} }
+  }catch(e){ toast(e.message,'err'); }
+  finally{ btn.disabled=false; btn.innerHTML='🔌 Hubungkan & Sinkronkan'; }
+}
+async function syncTest(){
+  $('#syStatus').innerHTML='<div class="skeleton" style="height:90px;border-radius:12px"></div>';
+  $('#syBody').innerHTML=skeletonRows(5,4);
+  try{ const r=await rpc('apiSyncTest'); _master=null; renderSyncInfo(r); toast('Koneksi OK — cache di-refresh ✅'); }
+  catch(e){ toast(e.message,'err'); }
+}
+async function syncReset(){
+  if(!confirm('Kembalikan koneksi ke spreadsheet default?')) return;
+  try{ const r=await rpc('apiSyncReset'); $('#syUrl').value=''; renderSyncInfo(r); toast('Kembali ke spreadsheet default','warn'); }
+  catch(e){ toast(e.message,'err'); }
+}
+/* Diagnosa: tampilkan apa yang BENAR-BENAR terbaca dari tiap sheet
+   (nama sheet asli, header asli→kanonis, jumlah baris, sampel). */
+async function syncDiagnose(){
+  openModal('<button class="x" onclick="closeModal()">✕</button><h3>🩺 Diagnosa Data Sheet</h3><div class="skeleton" style="height:140px;border-radius:12px;margin-top:14px"></div>', true);
+  try{
+    const r=await rpc('apiDiagnose');
+    openModal(`<button class="x" onclick="closeModal()">✕</button>
+      <h3>🩺 Diagnosa Data Sheet ${!IS_DEMO?'<span class="badge" style="background:var(--ok-l);color:var(--ok);vertical-align:middle">LIVE GSHEET</span>':'<span class="badge b-PENDING" style="vertical-align:middle">MODE DEMO — BUKAN DATA SHEET ASLI</span>'}</h3>
+      <p style="color:var(--ink-3);font-size:12px;margin:4px 0 12px;word-break:break-all">Spreadsheet ID: ${esc(r.ssId)}</p>
+      ${r.sheets.map(s=>`
+        <div style="border:1.5px solid ${s.ok&&s.rowCount>0?'var(--line)':'var(--err)'};border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <b>${esc(s.key)}</b>
+            ${s.realName!==s.key&&s.ok?'<small style="color:var(--warn)">(nama asli: '+esc(s.realName)+')</small>':''}
+            <span class="badge" style="background:${s.ok?(s.rowCount>0?'var(--ok-l);color:var(--ok)':'var(--warn-l);color:var(--warn)'):'var(--err-l);color:var(--err)'};margin-left:auto">
+              ${s.ok?(s.rowCount>0?s.rowCount+' BARIS TERBACA':'⚠ 0 BARIS'):'✕ GAGAL'}</span>
+          </div>
+          ${s.ok?`<div style="font-size:11px;color:var(--ink-2);margin-top:7px;line-height:1.8">
+            <b>Header terbaca:</b> ${s.headers.map((h,j)=>{const c=s.canonHeaders[j];const bad=String(c).startsWith('? ');
+              return '<span style="display:inline-block;background:'+(bad?'var(--warn-l)':'#f1f5f9')+';border-radius:6px;padding:1px 7px;margin:1px">'+esc(h)+(bad?' ⚠':'')+'</span>';}).join('')}
+            <br><b>Sampel baris 1:</b> <code style="font-size:10.5px;word-break:break-all">${esc(s.sample)}</code></div>`
+          :`<div style="font-size:12px;color:var(--err);margin-top:6px">${esc(s.sample)}</div>`}
+        </div>`).join('')}
+      <p style="font-size:11.5px;color:var(--ink-3)">⚠ = kolom tidak dikenali aplikasi (cek ejaan header) · "0 BARIS" = sheet ada tapi data di bawah header kosong / header tidak di baris 1.</p>
+      <div style="text-align:right"><button class="btn btn-pri btn-sm" onclick="closeModal()">Tutup</button></div>`, true);
+  }catch(e){ toast(e.message,'err'); closeModal(); }
+}
+function copyText(t){
+  try{ navigator.clipboard.writeText(t); toast('Disalin ke clipboard 📋'); }
+  catch(e){ prompt('Salin manual:', t); }
+}
+
+/* refresh cache karyawan utk autocomplete Form OT (mode live) */
+async function refreshBootKaryawan(){
+  if(IS_DEMO) return; // mock sudah update STATE.boot langsung
+  try{ const r=await rpc('apiBootstrap'); if(r.ok) STATE.boot.karyawan=r.bootstrap.karyawan; }catch(e){}
+}
+
+async function saveRates(){
+  try{
+    const r=await rpc('apiSaveRates', {firstHour:+$('#rFirst').value, nextHour:+$('#rNext').value});
+    STATE.boot.rates=r.rates; toast('Rate lembur tersimpan ✅');
+  }catch(e){ toast(e.message,'err'); }
+}
+</script>
+</body>
+</html>

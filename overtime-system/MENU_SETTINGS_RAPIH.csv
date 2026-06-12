@@ -1,0 +1,12 @@
+IdMenu,MenuName,IdParent,RoutePath,OrderIndex,IsActive
+M1,Dashboard,NULL,/dashboard,1,TRUE
+M2,Form OT,NULL,/form-ot,2,TRUE
+M3,OT History,NULL,/ot-history,3,TRUE
+M4,Approval,NULL,/approval,4,TRUE
+M5,Audit Log,NULL,/audit-log,5,TRUE
+M6,Report,NULL,/report,6,TRUE
+M7,Settings,NULL,/settings,7,TRUE
+M7A,Umum & User,M7,/settings/umum,1,TRUE
+M7B,Data Karyawan,M7,/settings/karyawan,2,TRUE
+M7C,Master Data,M7,/settings/master,3,TRUE
+M7D,Sinkronisasi,M7,/settings/sinkronisasi,4,TRUE
